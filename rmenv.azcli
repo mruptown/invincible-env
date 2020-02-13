@@ -1,0 +1,7 @@
+#Login
+#az login --service-principal --username fa49ed09-5651-4ff8-9dc9-e002491761e1 --tenant b6c49906-1735-468c-a4a8-7cc863cf5f66 --password /Users/jwiegm/tmphlz0lp0f.pem
+az login
+
+#Delete Resource Group
+resourceGroupName='invincible-jdw-eastus'
+az group delete --name $resourceGroupName --yes

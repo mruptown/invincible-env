@@ -1,0 +1,59 @@
+#Login
+#az login --service-principal --username f2ca3d4d-05e5-4001-a135-49839f1ea51f --tenant b6c49906-1735-468c-a4a8-7cc863cf5f66 --password /Users/jwiegm/tmphlz0lp0f.pem
+az login
+
+#Resource Groups
+resourceGroupName='invincible-jdw-eastus'
+az group create --name $resourceGroupName --location eastus
+
+# Create the CosmosDB account   
+cosmosAccountName='invincible-jdw-cosmos'
+az cosmosdb create \
+    -n $cosmosAccountName \
+    -g $resourceGroupName \
+    --default-consistency-level Session \
+    --enable-multiple-write-locations \
+    --enable-automatic-failover \
+    --kind=MongoDB \
+    --locations regionName=eastus failoverPriority=0 isZoneRedundant=True \
+    --locations regionName=uksouth failoverPriority=1 isZoneRedundant=True \
+    --locations regionName=southeastasia failoverPriority=2 isZoneRedundant=True
+
+# Create a SQL API database and container
+databaseName='invincible-db'
+containerName='invincible-container'
+shardKey='invincibleShardKey'
+throughput=400
+
+az cosmosdb mongodb database create \
+    -a $cosmosAccountName \
+    -g $resourceGroupName \
+    -n $databaseName \
+    --throughput $throughput
+
+az cosmosdb mongodb collection create \
+    -a $cosmosAccountName \
+    -g $resourceGroupName \
+    -d $databaseName \
+    -n $containerName \
+    --shard $shardKey \
+    --throughput $throughput
+
+# Create an App Service for the WebApp
+appServiceName='invincible-appservice'
+az appservice plan create \
+    -g $resourceGroupName \
+    -n $appServiceName
+
+# Create the webapp definition
+appName='invincible-jdw'
+az webapp create \
+    -g $resourceGroupName \
+    -p $appServiceName \
+    -n $appName 
+
+# # Deploy the webapp
+# az webapp deployment source config-zip \
+#     -g $resourceGroupName \
+#     -n $appName \
+#     --src ../webapp/invincible.zip
