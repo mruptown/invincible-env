@@ -51,14 +51,3 @@ az webapp create \
 
 # Set database user, password, and connection string
 # az webapp config appsettings set -g MyResourceGroup -n MyUniqueApp --settings WEBSITE_NODE_DEFAULT_VERSION=6.9.1
-
-# Deploy the webapp
-az webapp deployment source config \
-    -g $resourceGroupName \
-    -n $appName \
-    -u https://github.com/mruptown/invincible \
-    --branch master \
-    --git-token 2bf76554a42ba84e9112d99d3b6b7745f38a9543
-
-# Deploy the webapp
-az webapp deployment source config -g 'invincible-jdw-eastus' -n 'invincible-jdw' -u https://github.com/mruptown/invincible --branch master --git-token 2bf76554a42ba84e9112d99d3b6b7745f38a9543
