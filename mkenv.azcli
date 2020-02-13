@@ -31,29 +31,34 @@ az cosmosdb mongodb database create \
     -n $databaseName \
     --throughput $throughput
 
-az cosmosdb mongodb collection create \
-    -a $cosmosAccountName \
-    -g $resourceGroupName \
-    -d $databaseName \
-    -n $containerName \
-    --shard $shardKey \
-    --throughput $throughput
+# Retrieve database user, password, and connection string
+# az cosmosdb show --name MyCosmosDBDatabaseAccount --resource-group MyResourceGroup
 
 # Create an App Service for the WebApp
 appServiceName='invincible-appservice'
 az appservice plan create \
     -g $resourceGroupName \
-    -n $appServiceName
+    -n $appServiceName \
+    --is-linux
 
 # Create the webapp definition
 appName='invincible-jdw'
 az webapp create \
     -g $resourceGroupName \
     -p $appServiceName \
-    -n $appName 
+    -n $appName \
+    -r 'node|10.15'
 
-# # Deploy the webapp
-# az webapp deployment source config-zip \
-#     -g $resourceGroupName \
-#     -n $appName \
-#     --src ../webapp/invincible.zip
+# Set database user, password, and connection string
+# az webapp config appsettings set -g MyResourceGroup -n MyUniqueApp --settings WEBSITE_NODE_DEFAULT_VERSION=6.9.1
+
+# Deploy the webapp
+az webapp deployment source config \
+    -g $resourceGroupName \
+    -n $appName \
+    -u https://github.com/mruptown/invincible \
+    --branch master \
+    --git-token 2bf76554a42ba84e9112d99d3b6b7745f38a9543
+
+# Deploy the webapp
+az webapp deployment source config -g 'invincible-jdw-eastus' -n 'invincible-jdw' -u https://github.com/mruptown/invincible --branch master --git-token 2bf76554a42ba84e9112d99d3b6b7745f38a9543
