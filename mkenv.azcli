@@ -22,7 +22,6 @@ az cosmosdb create \
 # Create a SQL API database and container
 databaseName='invincible-db'
 containerName='invincible-container'
-shardKey='invincibleShardKey'
 throughput=400
 
 az cosmosdb mongodb database create \
@@ -47,7 +46,7 @@ az webapp create \
     -g $resourceGroupName \
     -p $appServiceName \
     -n $appName \
-    -r 'node|10.15'
+    -r 'NODE|12.9'
 
 # Set database user, password, and connection string
 # az webapp config appsettings set -g MyResourceGroup -n MyUniqueApp --settings WEBSITE_NODE_DEFAULT_VERSION=6.9.1
