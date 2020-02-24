@@ -1,5 +1,7 @@
 # invincible-env
 
+![Architecture Diagram](architecture-diagram.png?raw=true)
+
 Sets up invincible ecosystem on Azure.  After this script is done, you will need to integrate the Azure CI/CD with the invincible webapp.  This can be done via a command similar to the following:
 
 ```
