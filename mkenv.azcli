@@ -5,48 +5,117 @@ az login
 #Resource Groups
 resourceGroupName='invincible-jdw-eastus'
 az group create --name $resourceGroupName --location eastus
+location1='eastus'
+location2='uksouth'
+location3='southeastasia'
 
-# Create the CosmosDB account   
-cosmosAccountName='invincible-jdw-cosmos'
-az cosmosdb create \
-    -n $cosmosAccountName \
-    -g $resourceGroupName \
-    --default-consistency-level Session \
-    --enable-multiple-write-locations \
-    --enable-automatic-failover \
-    --kind=MongoDB \
-    --locations regionName=eastus failoverPriority=0 isZoneRedundant=True \
-    --locations regionName=uksouth failoverPriority=1 isZoneRedundant=True \
-    --locations regionName=southeastasia failoverPriority=2 isZoneRedundant=True
+# # Create the CosmosDB account   
+# cosmosAccountName='invincible-jdw-cosmos'
+# az cosmosdb create \
+#     -n $cosmosAccountName \
+#     -g $resourceGroupName \
+#     --default-consistency-level Session \
+#     --enable-multiple-write-locations \
+#     --enable-automatic-failover \
+#     --kind=MongoDB \
+#     --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+#     --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+#     --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
 
-# Create a SQL API database and container
-databaseName='invincible-db'
-containerName='invincible-container'
-throughput=400
+# # Create a SQL API database and container
+# databaseName='invincible-db'
+# containerName='invincible-container'
+# throughput=400
 
-az cosmosdb mongodb database create \
-    -a $cosmosAccountName \
-    -g $resourceGroupName \
-    -n $databaseName \
-    --throughput $throughput
+# az cosmosdb mongodb database create \
+#     -a $cosmosAccountName \
+#     -g $resourceGroupName \
+#     -n $databaseName \
+#     --throughput $throughput
 
 # Retrieve database user, password, and connection string
 # az cosmosdb show --name MyCosmosDBDatabaseAccount --resource-group MyResourceGroup
 
 # Create an App Service for the WebApp
-appServiceName='invincible-appservice'
+appServiceName1="invincible-appservice-$location1"
+appServiceName2="invincible-appservice-$location2"
+appServiceName3="invincible-appservice-$location3"
+
 az appservice plan create \
     -g $resourceGroupName \
-    -n $appServiceName \
+    -n $appServiceName1 \
+    -l $location1 \
     --is-linux
 
-# Create the webapp definition
-appName='invincible-jdw'
-az webapp create \
+# az appservice plan create \
+#     -g $resourceGroupName \
+#     -n $appServiceName2 \
+#     -l $location2 \
+#     --is-linux
+
+az appservice plan create \
     -g $resourceGroupName \
-    -p $appServiceName \
-    -n $appName \
-    -r 'NODE|12.9'
+    -n $appServiceName3 \
+    -l $location3 \
+    --is-linux
+
+# Create the webapp definitions
+appName1="invincible-app-$location1"
+appName2="invincible-app-$location2"
+appName3="invincible-app-$location3"
+site1=$(az webapp create \
+    -g $resourceGroupName \
+    -p $appServiceName1 \
+    -n $appName1 \
+    -r 'NODE|12.9' \
+    --query id \
+    --output tsv)
+# site2=$(az webapp create \
+#     -g $resourceGroupName \
+#     -p $appServiceName2 \
+#     -n $appName2 \
+#     -r 'NODE|12.9' \
+#     --query id \
+#     --output tsv)
+site3=$(az webapp create \
+    -g $resourceGroupName \
+    -p $appServiceName3 \
+    -n $appName3 \
+    -r 'NODE|12.9' \
+    --query id \
+    --output tsv)
+
+
+
+
+# Create a Traffic Manager Profile
+trafficManagerProfileName=invincible-tm-profile
+randomNumber=$(uuidgen)
+az network traffic-manager profile create \
+    -n $trafficManagerProfileName \
+    -g $resourceGroupName \
+    --routing-method Performance \
+    --unique-dns-name invincible-DNS-$randomNumber
+
+# Assign each Web App as an Endpoint for high-availabilty
+az network traffic-manager endpoint create \
+    -n $appName1-$location1 \
+    -g $resourceGroupName \
+    --profile-name $trafficManagerProfileName \
+    --type azureEndpoints \
+    --target-resource-id $site1
+# az network traffic-manager endpoint create \
+#     -n $appName2-$location2 \
+#     -g $resourceGroupName \
+#     --profile-name $trafficManagerProfileName \
+#     --type azureEndpoints \
+#     --target-resource-id $site2
+az network traffic-manager endpoint create \
+    -n $appName3-$location3 \
+    -g $resourceGroupName \
+    --profile-name $trafficManagerProfileName \
+    --type azureEndpoints \
+    --target-resource-id $site3
 
 # Set database user, password, and connection string
 # az webapp config appsettings set -g MyResourceGroup -n MyUniqueApp --settings WEBSITE_NODE_DEFAULT_VERSION=6.9.1
