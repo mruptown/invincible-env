@@ -99,19 +99,19 @@ az network traffic-manager profile create \
 
 # Assign each Web App as an Endpoint for high-availabilty
 az network traffic-manager endpoint create \
-    -n $appName1-$location1 \
+    -n $appName1-tm-endpoint \
     -g $resourceGroupName \
     --profile-name $trafficManagerProfileName \
     --type azureEndpoints \
     --target-resource-id $site1
 # az network traffic-manager endpoint create \
-#     -n $appName2-$location2 \
+#     -n $appName2-tm-endpoint \
 #     -g $resourceGroupName \
 #     --profile-name $trafficManagerProfileName \
 #     --type azureEndpoints \
 #     --target-resource-id $site2
 az network traffic-manager endpoint create \
-    -n $appName3-$location3 \
+    -n $appName3-tm-endpoint \
     -g $resourceGroupName \
     --profile-name $trafficManagerProfileName \
     --type azureEndpoints \
