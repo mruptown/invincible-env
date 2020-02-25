@@ -9,80 +9,31 @@ location1='eastus'
 location2='eastus2'
 location3='southeastasia'
 
-# # Create the CosmosDB account   
-# cosmosAccountName='invincible-jdw-cosmos'
-# az cosmosdb create \
-#     -n $cosmosAccountName \
-#     -g $resourceGroupName \
-#     --default-consistency-level Session \
-#     --enable-multiple-write-locations \
-#     --enable-automatic-failover \
-#     --kind=MongoDB \
-#     --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-#     --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
-#     --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
+# Create the CosmosDB account   
+cosmosAccountName='invincible-jdw-cosmos'
+az cosmosdb create \
+    -n $cosmosAccountName \
+    -g $resourceGroupName \
+    --default-consistency-level Session \
+    --enable-multiple-write-locations \
+    --enable-automatic-failover \
+    --kind=MongoDB \
+    --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+    --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+    --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
 
-# # Create a SQL API database and container
-# databaseName='invincible-db'
-# containerName='invincible-container'
-# throughput=400
-
-# az cosmosdb mongodb database create \
-#     -a $cosmosAccountName \
-#     -g $resourceGroupName \
-#     -n $databaseName \
-#     --throughput $throughput
+# Create a MongoDB database and container
+databaseName='invincible-db'
+containerName='invincible-container'
+az cosmosdb mongodb database create \
+    -a $cosmosAccountName \
+    -g $resourceGroupName \
+    -n $databaseName
 
 # Retrieve database user, password, and connection string
-# az cosmosdb show -n $cosmosAccountName -g $resourceGroupName
-
-# Create an App Service for the WebApp
-appServiceName1="invincible-appservice-$location1"
-appServiceName2="invincible-appservice-$location2"
-appServiceName3="invincible-appservice-$location3"
-
-az appservice plan create \
-    -g $resourceGroupName \
-    -n $appServiceName1 \
-    -l $location1 \
-    --is-linux
-
-az appservice plan create \
-    -g $resourceGroupName \
-    -n $appServiceName2 \
-    -l $location2 \
-    --is-linux
-
-az appservice plan create \
-    -g $resourceGroupName \
-    -n $appServiceName3 \
-    -l $location3 \
-    --is-linux
-
-# Create the webapp definitions
-appName1="invincible-app-$location1"
-appName2="invincible-app-$location2"
-appName3="invincible-app-$location3"
-site1=$(az webapp create \
-    -g $resourceGroupName \
-    -p $appServiceName1 \
-    -n $appName1 \
-    -r 'NODE|12.9' \
-    --query id \
-    --output tsv)
-site2=$(az webapp create \
-    -g $resourceGroupName \
-    -p $appServiceName2 \
-    -n $appName2 \
-    -r 'NODE|12.9' \
-    --query id \
-    --output tsv)
-site3=$(az webapp create \
-    -g $resourceGroupName \
-    -p $appServiceName3 \
-    -n $appName3 \
-    -r 'NODE|12.9' \
-    --query id \
+mongoDbConnectionString=$(az cosmosdb list-connection-strings \
+    -n invincible-jdw-cosmos \
+    --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
     --output tsv)
 
 # Create a Traffic Manager Profile
@@ -94,33 +45,37 @@ az network traffic-manager profile create \
     --routing-method Performance \
     --unique-dns-name invincible-DNS-$randomNumber
 
-# Assign each Web App as an Endpoint for high-availabilty
-az network traffic-manager endpoint create \
-    -n $appName1-tm-endpoint \
-    -g $resourceGroupName \
-    --profile-name $trafficManagerProfileName \
-    --type azureEndpoints \
-    --target-resource-id $site1
-az network traffic-manager endpoint create \
-    -n $appName2-tm-endpoint \
-    -g $resourceGroupName \
-    --profile-name $trafficManagerProfileName \
-    --type azureEndpoints \
-    --target-resource-id $site2
-az network traffic-manager endpoint create \
-    -n $appName3-tm-endpoint \
-    -g $resourceGroupName \
-    --profile-name $trafficManagerProfileName \
-    --type azureEndpoints \
-    --target-resource-id $site3
+# Create webapps in a loop
+for location in eastus eastus2 southeastasia
+do
+    # Create an App Service for the WebApp
+    appServiceName="invincible-appservice-$location"
 
-# Set database user, password, and connection string
-# az webapp config appsettings set -g $resourceGroupName -n $appName1 --settings DB_USER=foo
-# az webapp config appsettings set -g $resourceGroupName -n $appName1 --settings DB_PASSWORD=bar
-# az webapp config appsettings set -g $resourceGroupName -n $appName1 --settings DB_CONN=localhost
-# az webapp config appsettings set -g $resourceGroupName -n $appName2 --settings DB_USER=foo
-# az webapp config appsettings set -g $resourceGroupName -n $appName2 --settings DB_PASSWORD=bar
-# az webapp config appsettings set -g $resourceGroupName -n $appName2 --settings DB_CONN=localhost
-# az webapp config appsettings set -g $resourceGroupName -n $appName3 --settings DB_USER=foo
-# az webapp config appsettings set -g $resourceGroupName -n $appName3 --settings DB_PASSWORD=bar
-# az webapp config appsettings set -g $resourceGroupName -n $appName3 --settings DB_CONN=localhost
+    az appservice plan create \
+        -g $resourceGroupName \
+        -n $appServiceName \
+        -l $location \
+        --is-linux
+
+    # Create the webapp definitions
+    appName="invincible-app-$location"
+    
+    site=$(az webapp create \
+        -g $resourceGroupName \
+        -p $appServiceName \
+        -n $appName \
+        -r 'NODE|12.9' \
+        --query id \
+        --output tsv)
+
+    # Assign each Web App as an Endpoint for high-availabilty
+    az network traffic-manager endpoint create \
+        -n $appName-tm-endpoint \
+        -g $resourceGroupName \
+        --profile-name $trafficManagerProfileName \
+        --type azureEndpoints \
+        --target-resource-id $site
+
+    # Set database connection string as an environment variable on the webapp servers
+    az webapp config appsettings set -g $resourceGroupName -n $appName --settings DB_CONN="$mongoDbConnectionString"
+done
