@@ -1,5 +1,4 @@
 #Login
-#az login --service-principal --username f2ca3d4d-05e5-4001-a135-49839f1ea51f --tenant b6c49906-1735-468c-a4a8-7cc863cf5f66 --password /Users/jwiegm/tmphlz0lp0f.pem
 az login
 
 #Resource Groups
