@@ -11,7 +11,7 @@ location2='eastus2'
 location3='southeastasia'
 
 # Create the CosmosDB account   
-cosmosAccountName='invincible-jdw-cosmos'
+cosmosAccountName='invincible-cosmos'
 az cosmosdb create \
     -n $cosmosAccountName \
     -g $resourceGroupName \
@@ -25,7 +25,6 @@ az cosmosdb create \
 
 # Create a MongoDB database and container
 databaseName='invincible-db'
-containerName='invincible-container'
 az cosmosdb mongodb database create \
     -a $cosmosAccountName \
     -g $resourceGroupName \
