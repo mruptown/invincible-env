@@ -6,7 +6,7 @@ az login
 resourceGroupName='invincible-jdw-eastus'
 az group create --name $resourceGroupName --location eastus
 location1='eastus'
-location2='uksouth'
+location2='eastus2'
 location3='southeastasia'
 
 # # Create the CosmosDB account   
@@ -34,7 +34,7 @@ location3='southeastasia'
 #     --throughput $throughput
 
 # Retrieve database user, password, and connection string
-# az cosmosdb show --name MyCosmosDBDatabaseAccount --resource-group MyResourceGroup
+# az cosmosdb show -n $cosmosAccountName -g $resourceGroupName
 
 # Create an App Service for the WebApp
 appServiceName1="invincible-appservice-$location1"
@@ -47,11 +47,11 @@ az appservice plan create \
     -l $location1 \
     --is-linux
 
-# az appservice plan create \
-#     -g $resourceGroupName \
-#     -n $appServiceName2 \
-#     -l $location2 \
-#     --is-linux
+az appservice plan create \
+    -g $resourceGroupName \
+    -n $appServiceName2 \
+    -l $location2 \
+    --is-linux
 
 az appservice plan create \
     -g $resourceGroupName \
@@ -70,13 +70,13 @@ site1=$(az webapp create \
     -r 'NODE|12.9' \
     --query id \
     --output tsv)
-# site2=$(az webapp create \
-#     -g $resourceGroupName \
-#     -p $appServiceName2 \
-#     -n $appName2 \
-#     -r 'NODE|12.9' \
-#     --query id \
-#     --output tsv)
+site2=$(az webapp create \
+    -g $resourceGroupName \
+    -p $appServiceName2 \
+    -n $appName2 \
+    -r 'NODE|12.9' \
+    --query id \
+    --output tsv)
 site3=$(az webapp create \
     -g $resourceGroupName \
     -p $appServiceName3 \
@@ -84,9 +84,6 @@ site3=$(az webapp create \
     -r 'NODE|12.9' \
     --query id \
     --output tsv)
-
-
-
 
 # Create a Traffic Manager Profile
 trafficManagerProfileName=invincible-tm-profile
@@ -104,12 +101,12 @@ az network traffic-manager endpoint create \
     --profile-name $trafficManagerProfileName \
     --type azureEndpoints \
     --target-resource-id $site1
-# az network traffic-manager endpoint create \
-#     -n $appName2-tm-endpoint \
-#     -g $resourceGroupName \
-#     --profile-name $trafficManagerProfileName \
-#     --type azureEndpoints \
-#     --target-resource-id $site2
+az network traffic-manager endpoint create \
+    -n $appName2-tm-endpoint \
+    -g $resourceGroupName \
+    --profile-name $trafficManagerProfileName \
+    --type azureEndpoints \
+    --target-resource-id $site2
 az network traffic-manager endpoint create \
     -n $appName3-tm-endpoint \
     -g $resourceGroupName \
@@ -118,4 +115,12 @@ az network traffic-manager endpoint create \
     --target-resource-id $site3
 
 # Set database user, password, and connection string
-# az webapp config appsettings set -g MyResourceGroup -n MyUniqueApp --settings WEBSITE_NODE_DEFAULT_VERSION=6.9.1
+# az webapp config appsettings set -g $resourceGroupName -n $appName1 --settings DB_USER=foo
+# az webapp config appsettings set -g $resourceGroupName -n $appName1 --settings DB_PASSWORD=bar
+# az webapp config appsettings set -g $resourceGroupName -n $appName1 --settings DB_CONN=localhost
+# az webapp config appsettings set -g $resourceGroupName -n $appName2 --settings DB_USER=foo
+# az webapp config appsettings set -g $resourceGroupName -n $appName2 --settings DB_PASSWORD=bar
+# az webapp config appsettings set -g $resourceGroupName -n $appName2 --settings DB_CONN=localhost
+# az webapp config appsettings set -g $resourceGroupName -n $appName3 --settings DB_USER=foo
+# az webapp config appsettings set -g $resourceGroupName -n $appName3 --settings DB_PASSWORD=bar
+# az webapp config appsettings set -g $resourceGroupName -n $appName3 --settings DB_CONN=localhost
