@@ -2,7 +2,7 @@
 az login
 
 #Resource Groups
-userid=$(pwd)
+userid=$(whoami)
 resourceGroupName='invincible-$userid-eastus'
 az group create --name $resourceGroupName --location eastus
 location1='eastus'
