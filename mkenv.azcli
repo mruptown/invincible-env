@@ -3,7 +3,8 @@
 az login
 
 #Resource Groups
-resourceGroupName='invincible-jdw-eastus'
+userid=$(pwd)
+resourceGroupName='invincible-$userid-eastus'
 az group create --name $resourceGroupName --location eastus
 location1='eastus'
 location2='eastus2'
