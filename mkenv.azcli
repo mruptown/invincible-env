@@ -32,6 +32,7 @@ az cosmosdb mongodb database create \
 # Retrieve database user, password, and connection string
 mongoDbConnectionString=$(az cosmosdb list-connection-strings \
     -n $cosmosAccountName \
+    -g $resourceGroupName \
     --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
     --output tsv)
 
