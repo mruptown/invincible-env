@@ -3,5 +3,5 @@ az login
 
 #Delete Resource Group
 userid=$(whoami)
-resourceGroupName='invincible-$userid-eastus'
+resourceGroupName="invincible-$userid-eastus"
 az group delete --name $resourceGroupName --yes

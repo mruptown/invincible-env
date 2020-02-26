@@ -3,14 +3,14 @@ az login
 
 #Resource Groups
 userid=$(whoami)
-resourceGroupName='invincible-$userid-eastus'
+resourceGroupName="invincible-$userid-eastus"
 az group create --name $resourceGroupName --location eastus
-location1='eastus'
-location2='eastus2'
-location3='southeastasia'
+location1="eastus"
+location2="eastus2"
+location3="southeastasia"
 
 # Create the CosmosDB account   
-cosmosAccountName='invincible-cosmos'
+cosmosAccountName="invincible-cosmos"
 az cosmosdb create \
     -n $cosmosAccountName \
     -g $resourceGroupName \
@@ -23,7 +23,7 @@ az cosmosdb create \
     --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
 
 # Create a MongoDB database and container
-databaseName='invincible-db'
+databaseName="invincible-db"
 az cosmosdb mongodb database create \
     -a $cosmosAccountName \
     -g $resourceGroupName \
@@ -36,7 +36,7 @@ mongoDbConnectionString=$(az cosmosdb list-connection-strings \
     --output tsv)
 
 # Create a Traffic Manager Profile
-trafficManagerProfileName=invincible-tm-profile
+trafficManagerProfileName="invincible-tm-profile"
 randomNumber=$(uuidgen)
 az network traffic-manager profile create \
     -n $trafficManagerProfileName \
