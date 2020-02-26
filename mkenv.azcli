@@ -10,7 +10,7 @@ location2="eastus2"
 location3="southeastasia"
 
 # Create the CosmosDB account   
-cosmosAccountName="invincible-cosmos"
+cosmosAccountName="invincible-$userid-cosmos"
 az cosmosdb create \
     -n $cosmosAccountName \
     -g $resourceGroupName \
@@ -31,7 +31,7 @@ az cosmosdb mongodb database create \
 
 # Retrieve database user, password, and connection string
 mongoDbConnectionString=$(az cosmosdb list-connection-strings \
-    -n invincible-jdw-cosmos \
+    -n $cosmosAccountName \
     --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
     --output tsv)
 
