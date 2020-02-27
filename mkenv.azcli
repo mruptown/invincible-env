@@ -7,7 +7,7 @@ userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
 az group create --name $resourceGroupName --location eastus
 location1="eastus"
-location2="northeurope"
+location2="westeurope"
 location3="southeastasia"
 
 # Create the CosmosDB account   
