@@ -47,7 +47,7 @@ az network traffic-manager profile create \
     --unique-dns-name invincible-DNS-$randomNumber
 
 # Create webapps in a loop
-for location in eastus eastus2 southeastasia
+for location in eastus westeurope southeastasia
 do
     # Create an App Service for the WebApp
     appServiceName="invincible-appservice-$location"
