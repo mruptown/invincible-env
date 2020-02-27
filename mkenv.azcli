@@ -1,5 +1,6 @@
 #Login
-az login
+az login 
+az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 
 #Resource Groups
 userid=$(whoami)
@@ -36,10 +37,15 @@ mongoDbConnectionString=$(az cosmosdb list-connection-strings \
     --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
     --output tsv)
 
+<<<<<<< HEAD
+# Create a Traffic Manager Profile
+trafficManagerProfileName="invincible-tm-$userid-rofile"
+=======
 az extension add --name front-door
 
 # Create the front door
 frontDoorName="invincible-$userid-fd"
+>>>>>>> aa427905fbb8557fe22b5af3b57ac69966ebbb31
 randomNumber=$(uuidgen)
 az network front-door create \
     --backend-address "invincible-fdbep-$randomNumber.azurefd.net" \
@@ -90,7 +96,7 @@ az network front-door backend-pool create \
 for location in eastus westeurope southeastasia
 do
     # Create an App Service for the WebApp
-    appServiceName="invincible-appservice-$location"
+    appServiceName="invincible-$userid-appservice-$location"
 
     az appservice plan create \
         -g $resourceGroupName \
@@ -99,7 +105,11 @@ do
         --is-linux
 
     # Create the webapp definitions
+<<<<<<< HEAD
+    appName="invincible-app--$user-$location"
+=======
     appName="invincible-app-$userid-$location"
+>>>>>>> aa427905fbb8557fe22b5af3b57ac69966ebbb31
     
     site=$(az webapp create \
         -g $resourceGroupName \

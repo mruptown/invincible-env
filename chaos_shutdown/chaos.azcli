@@ -1,0 +1,78 @@
+#Login
+#az login
+az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
+
+#Resource Groups
+userid=$(whoami)
+resourceGroupName="invincible-$userid-eastus"
+location1="eastus"
+location2="westeurope"
+location3="southeastasia"
+location4="eastus2"
+
+# Create webapps in a loop
+for location in eastus westeurope southeastasia
+do
+    # Create Variables for app names
+    appServiceName="invincible-$userid-appservice-$location"
+    appName="invincible-app-$userid-$location"
+
+echo "Current State"
+az webapp show \
+        -g $resourceGroupName \
+        -n $appName \
+--query '[defaultHostName, state]' -o json
+
+echo "Stopping $appName"
+az webapp stop \
+        -g $resourceGroupName \
+        -n $appName \
+
+sleep 2 
+echo ""
+echo "Current State"
+az webapp show \
+        -g $resourceGroupName \
+        -n $appName \
+--query '[defaultHostName, state]' -o json
+
+echo ""
+sleep 2
+
+echo "Starting $appName"
+az webapp start \
+        -g $resourceGroupName \
+        -n $appName \
+
+echo ""
+echo "Current State"
+az webapp show \
+        -g $resourceGroupName \
+        -n $appName \
+--query '[defaultHostName, state]' -o json
+echo ""
+echo "----------------------------------"
+
+done
+
+#cosmosAccountName="invincible-$userid-cosmos"
+#echo 
+#az webapp stop [--ids]
+#               [--name]
+#               [--resource-group]
+#               [--slot]
+#               [--subscription]
+
+#az cosmosdb database list
+#    --name invincible-aplymal-cosmos 
+#   --resource-group invincible-aplymal-eastus 
+
+#az cosmosdb update \
+#   --name invincible-aplymal-cosmos \
+#   --resource-group invincible-aplymal-eastus \
+#   --default-consistency-level Session \
+#   --enable-multiple-write-locations \
+#   --enable-automatic-failover \
+#   --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+#   --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+#   --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True #   --locations regionName=$location4 failoverPriority=4 isZoneRedundant=True 
