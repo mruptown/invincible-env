@@ -1,0 +1,12 @@
+#Login
+az login
+az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
+
+az webapp stop --name MyWebapp --resource-group MyResourceGroup
+
+
+az webapp stop [--ids]
+               [--name]
+               [--resource-group]
+               [--slot]
+               [--subscription]

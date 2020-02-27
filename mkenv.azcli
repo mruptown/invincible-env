@@ -38,7 +38,7 @@ mongoDbConnectionString=$(az cosmosdb list-connection-strings \
     --output tsv)
 
 # Create a Traffic Manager Profile
-trafficManagerProfileName="invincible-tm-profile"
+trafficManagerProfileName="invincible-tm-$userid-rofile"
 randomNumber=$(uuidgen)
 az network traffic-manager profile create \
     -n $trafficManagerProfileName \
@@ -50,7 +50,7 @@ az network traffic-manager profile create \
 for location in eastus westeurope southeastasia
 do
     # Create an App Service for the WebApp
-    appServiceName="invincible-appservice-$location"
+    appServiceName="invincible-$userid-appservice-$location"
 
     az appservice plan create \
         -g $resourceGroupName \
