@@ -15,8 +15,8 @@ az cosmosdb create \
     -n $cosmosAccountName \
     -g $resourceGroupName \
     --default-consistency-level Session \
-    --enable-multiple-write-locations \
-    --enable-automatic-failover \
+    --enable-multiple-write-locations true \
+    --enable-automatic-failover true \
     --kind=MongoDB \
     --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
     --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
