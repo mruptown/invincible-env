@@ -20,18 +20,15 @@ do
     appName="invincible-app--$user-$location"
 
 echo "shutting down $location"
-az webapp stop
+az webapp stop \
         -g $resourceGroupName \
         -p $appServiceName \
         -n $appName \
 
 echo "starting back up $locaton"
-sleep 100
+sleep 30
 
 done
-
-
-
 
 #echo 
 #az webapp stop [--ids]
@@ -40,21 +37,16 @@ done
 #               [--slot]
 #               [--subscription]
 
-
 #az cosmosdb database list
 #    --name invincible-aplymal-cosmos 
 #   --resource-group invincible-aplymal-eastus 
 
-
-
-
- #az cosmosdb update \
- #   --name invincible-aplymal-cosmos \
- #   --resource-group invincible-aplymal-eastus \
- #   --default-consistency-level Session \
- #   --enable-multiple-write-locations \
- #   --enable-automatic-failover \
- #   --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
- #   --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
- #   --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
- #   --locations regionName=$location4 failoverPriority=4 isZoneRedundant=True 
+#az cosmosdb update \
+#   --name invincible-aplymal-cosmos \
+#   --resource-group invincible-aplymal-eastus \
+#   --default-consistency-level Session \
+#   --enable-multiple-write-locations \
+#   --enable-automatic-failover \
+#   --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+#   --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+#   --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True #   --locations regionName=$location4 failoverPriority=4 isZoneRedundant=True 
