@@ -1,5 +1,5 @@
 #Login
-az login 
+#az login 
 az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 
 #Resource Groups
@@ -11,6 +11,7 @@ location2="westeurope"
 location3="southeastasia"
 
 # Retrieve database user, password, and connection string
+cosmosAccountName="invincible-$userid-cosmos"
 mongoDbConnectionString=$(az cosmosdb list-connection-strings \
     -n $cosmosAccountName \
     -g $resourceGroupName \
@@ -39,7 +40,7 @@ do
         --is-linux
 
     # Create the webapp definitions
-    appName="invincible-app--$user-$location"
+    appName="invincible-app-$userid-$location"
     
     site=$(az webapp create \
         -g $resourceGroupName \
