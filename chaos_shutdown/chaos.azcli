@@ -17,31 +17,39 @@ do
     appServiceName="invincible-$userid-appservice-$location"
     appName="invincible-app-$userid-$location"
 
-echo "shutting down $appName"
+echo "Current State"
+az webapp show \
+        -g $resourceGroupName \
+        -n $appName \
+--query '[defaultHostName, state]' -o json
+
+echo "Stopping $appName"
 az webapp stop \
         -g $resourceGroupName \
         -n $appName \
 
 sleep 2 
 echo ""
-echo $appName
+echo "Current State"
 az webapp show \
-    -g $resourceGroupName \
+        -g $resourceGroupName \
         -n $appName \
-        | grep -i '"state":'
+--query '[defaultHostName, state]' -o json
+
 echo ""
 sleep 2
 
-echo "Bringing $appName back online"
+echo "Starting $appName"
 az webapp start \
         -g $resourceGroupName \
         -n $appName \
 
-echo $appName
+echo ""
+echo "Current State"
 az webapp show \
-    -g $resourceGroupName \
+        -g $resourceGroupName \
         -n $appName \
-        | grep -i '"state":'
+--query '[defaultHostName, state]' -o json
 echo ""
 echo "----------------------------------"
 
