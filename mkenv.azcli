@@ -59,7 +59,7 @@ do
         --is-linux
 
     # Create the webapp definitions
-    appName="invincible-app-$location"
+    appName="invincible-app--$user-$location"
     
     site=$(az webapp create \
         -g $resourceGroupName \
