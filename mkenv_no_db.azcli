@@ -1,0 +1,62 @@
+#Login
+az login 
+az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
+
+#Resource Groups
+userid=$(whoami)
+resourceGroupName="invincible-$userid-eastus"
+az group create --name $resourceGroupName --location eastus
+location1="eastus"
+location2="westeurope"
+location3="southeastasia"
+
+# Retrieve database user, password, and connection string
+mongoDbConnectionString=$(az cosmosdb list-connection-strings \
+    -n $cosmosAccountName \
+    -g $resourceGroupName \
+    --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
+    --output tsv)
+
+# Create a Traffic Manager Profile
+trafficManagerProfileName="invincible-tm-$userid-rofile"
+randomNumber=$(uuidgen)
+az network traffic-manager profile create \
+    -n $trafficManagerProfileName \
+    -g $resourceGroupName \
+    --routing-method Performance \
+    --unique-dns-name invincible-DNS-$randomNumber
+
+# Create webapps in a loop
+for location in eastus westeurope southeastasia
+do
+    # Create an App Service for the WebApp
+    appServiceName="invincible-$userid-appservice-$location"
+
+    az appservice plan create \
+        -g $resourceGroupName \
+        -n $appServiceName \
+        -l $location \
+        --is-linux
+
+    # Create the webapp definitions
+    appName="invincible-app--$user-$location"
+    
+    site=$(az webapp create \
+        -g $resourceGroupName \
+        -p $appServiceName \
+        -n $appName \
+        -r 'NODE|12.9' \
+        --query id \
+        --output tsv)
+
+    # Assign each Web App as an Endpoint for high-availabilty
+    az network traffic-manager endpoint create \
+        -n $appName-tm-endpoint \
+        -g $resourceGroupName \
+        --profile-name $trafficManagerProfileName \
+        --type azureEndpoints \
+        --target-resource-id $site
+
+    # Set database connection string as an environment variable on the webapp servers
+    az webapp config appsettings set -g $resourceGroupName -n $appName --settings DB_CONN="$mongoDbConnectionString"
+done

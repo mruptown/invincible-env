@@ -17,12 +17,11 @@ for location in eastus westeurope southeastasia
 do
     # Create Variables for app names
     appServiceName="invincible-$userid-appservice-$location"
-    appName="invincible-app--$user-$location"
+    appName="invincible-app-$userid-$location"
 
 echo "shutting down $location"
 az webapp stop \
         -g $resourceGroupName \
-        -p $appServiceName \
         -n $appName \
 
 echo "starting back up $locaton"
