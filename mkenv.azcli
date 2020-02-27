@@ -37,15 +37,10 @@ mongoDbConnectionString=$(az cosmosdb list-connection-strings \
     --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
     --output tsv)
 
-<<<<<<< HEAD
-# Create a Traffic Manager Profile
-trafficManagerProfileName="invincible-tm-$userid-rofile"
-=======
 az extension add --name front-door
 
 # Create the front door
 frontDoorName="invincible-$userid-fd"
->>>>>>> aa427905fbb8557fe22b5af3b57ac69966ebbb31
 randomNumber=$(uuidgen)
 az network front-door create \
     --backend-address "invincible-fdbep-$randomNumber.azurefd.net" \
@@ -105,12 +100,8 @@ do
         --is-linux
 
     # Create the webapp definitions
-<<<<<<< HEAD
-    appName="invincible-app--$user-$location"
-=======
     appName="invincible-app-$userid-$location"
->>>>>>> aa427905fbb8557fe22b5af3b57ac69966ebbb31
-    
+
     site=$(az webapp create \
         -g $resourceGroupName \
         -p $appServiceName \
