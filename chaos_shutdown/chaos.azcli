@@ -15,20 +15,12 @@ do
                 appServiceName="invincible-$userid-appservice-$location"
                 appName="invincible-app-$userid-$location"
 
-                status=$(az webapp show \
-                        -g $resourceGroupName \
-                        -n $appName \
-                        --query state \
-                        -o tsv)
-
-                echo "$location is now: $status"
-
                 echo "Stopping $location"
                 az webapp stop \
                         -g $resourceGroupName \
                         -n $appName 
 
-                sleep 5
+                sleep 20
 
                 status=$(az webapp show \
                         -g $resourceGroupName \
@@ -43,7 +35,7 @@ do
                         -g $resourceGroupName \
                         -n $appName 
 
-                sleep 5
+                sleep 20
 
                 status=$(az webapp show \
                         -g $resourceGroupName \
