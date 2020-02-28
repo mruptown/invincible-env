@@ -27,8 +27,8 @@ echo "$location1 database being removed"
         az cosmosdb update \
           --name $cosmosAccountName \
           --resource-group $resourceGroupName \
-          --locations regionName=$location2 failoverPriority=0 isZoneRedundant=True \
-          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
+          --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+          --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
 
 sleep 5
 
@@ -39,7 +39,7 @@ echo "$location2 database being removed"
           --name $cosmosAccountName \
           --resource-group $resourceGroupName \
           --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
+          --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
 
 sleep 5
 
