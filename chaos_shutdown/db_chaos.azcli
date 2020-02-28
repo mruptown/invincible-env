@@ -12,16 +12,21 @@ location4="eastus2"
 
 cosmosAccountName="invincible-$userid-cosmos"
 
-az cosmosdb database list \
-   --name $cosmosAccountName \
-   --resource-group $resourceGroupName 
+#while true
+#do
+        az cosmosdb update \
+        --name $cosmosAccountName \
+        --resource-group $resourceGroupName \
+        --locations regionName=$location2 failoverPriority=0 isZoneRedundant=True \
+        --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
 
-az cosmosdb update \
-   --name $cosmosAccountName \
-   --resource-group $resourceGroupName \
-   --default-consistency-level Session \
-   --enable-multiple-write-locations \
-   --enable-automatic-failover \
-   --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-   --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
-   --locations regionName=$location4 failoverPriority=4 isZoneRedundant=True 
+#sleep 10
+
+#        az cosmosdb update \
+#        --name $cosmosAccountName \
+#        --resource-group $resourceGroupName \
+#        --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+#        --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
+
+#done
+
