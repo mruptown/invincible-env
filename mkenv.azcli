@@ -1,135 +1,78 @@
 #Login
-az login 
+#az login
 az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 
 #Resource Groups
 userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
-az group create --name $resourceGroupName --location eastus
 location1="eastus"
 location2="westeurope"
 location3="southeastasia"
-
-# Create the CosmosDB account   
-cosmosAccountName="invincible-$userid-cosmos"
-az cosmosdb create \
-    -n $cosmosAccountName \
-    -g $resourceGroupName \
-    --default-consistency-level Session \
-    --enable-multiple-write-locations true \
-    --enable-automatic-failover true \
-    --kind=MongoDB \
-    --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-    --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
-    --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
-
-# Create a MongoDB database and container
-databaseName="invincible-db"
-az cosmosdb mongodb database create \
-    -a $cosmosAccountName \
-    -g $resourceGroupName \
-    -n $databaseName
-
-# Retrieve database user, password, and connection string
-mongoDbConnectionString=$(az cosmosdb list-connection-strings \
-    -n $cosmosAccountName \
-    -g $resourceGroupName \
-    --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
-    --output tsv)
-
-<<<<<<< HEAD
-# Create a Traffic Manager Profile
-trafficManagerProfileName="invincible-tm-$userid-rofile"
-=======
-az extension add --name front-door
-
-# Create the front door
-frontDoorName="invincible-$userid-fd"
->>>>>>> aa427905fbb8557fe22b5af3b57ac69966ebbb31
-randomNumber=$(uuidgen)
-az network front-door create \
-    --backend-address "invincible-fdbep-$randomNumber.azurefd.net" \
-    -n $frontDoorName \
-    -g $resourceGroupName
-
-# az network front-door frontend-endpoint create \
-#     -f $frontDoorName \
-#     --host-name $frontDoorName.azurefd.net \
-#     -n invincible-fd-feep \
-#     -g $resourceGroupName
-
-az network front-door probe create \
-    -f $frontDoorName \
-    --interval 5 \
-    -n invincible-probe \
-    -g $resourceGroupName \
-    --probeMethod GET \
-    --path "/"
-
-az network front-door load-balancing create \
-    -f $frontDoorName \
-    -n invincible-lb \
-    -g $resourceGroupName \
-    --sample-size 3 \
-    --successful-samples-required 3
-
-az network front-door backend-pool create \
-    --address "invincible-fdbep-$randomNumber.azurefd.net" \
-    -f $frontDoorName \
-    -n invincible-fd-bep \
-    --load-balancing invincible-lb \
-    --probe invincible-probe \
-    -g $resourceGroupName
-
-# Need to update the default routing rule
-# backendPoolId=$(az network front-door backend-pool show -n invincible-fd-bep -f invincible-jwiegm-fd --query id --output tsv)
-
-# az network front-door routing-rule create \
-#     -f $frontDoorName \
-#     --frontend-endpoints invincible-fd-feep \
-#     -n invincible-fd-rr \
-#     -g $resourceGroupName \
-#     --route-type Forward \
-#     --backend-pool invincible-fd-bep
+location4="eastus2"
 
 # Create webapps in a loop
 for location in eastus westeurope southeastasia
 do
-    # Create an App Service for the WebApp
+    # Create Variables for app names
     appServiceName="invincible-$userid-appservice-$location"
-
-    az appservice plan create \
-        -g $resourceGroupName \
-        -n $appServiceName \
-        -l $location \
-        --is-linux
-
-    # Create the webapp definitions
-<<<<<<< HEAD
-    appName="invincible-app--$user-$location"
-=======
     appName="invincible-app-$userid-$location"
->>>>>>> aa427905fbb8557fe22b5af3b57ac69966ebbb31
-    
-    site=$(az webapp create \
-        -g $resourceGroupName \
-        -p $appServiceName \
-        -n $appName \
-        -r 'NODE|12.9' \
-        --query hostNames \
-        --output tsv)
 
-    # Assign each Web App as an Endpoint for high-availabilty
-    az network front-door backend-pool backend add \
-        --address $site \
-        -f $frontDoorName \
-        --pool-name invincible-fd-bep \
-        -g $resourceGroupName
-
-    # Set database connection string as an environment variable on the webapp servers
-    az webapp config appsettings set \
+echo "Current State"
+az webapp show \
         -g $resourceGroupName \
         -n $appName \
-        --settings DB_CONN="$mongoDbConnectionString"
+--query '[defaultHostName, state]' -o json
+
+echo "Stopping $appName"
+az webapp stop \
+        -g $resourceGroupName \
+        -n $appName \
+
+sleep 2 
+echo ""
+echo "Current State"
+az webapp show \
+        -g $resourceGroupName \
+        -n $appName \
+--query '[defaultHostName, state]' -o json
+
+echo ""
+sleep 2
+
+echo "Starting $appName"
+az webapp start \
+        -g $resourceGroupName \
+        -n $appName \
+
+echo ""
+echo "Current State"
+az webapp show \
+        -g $resourceGroupName \
+        -n $appName \
+--query '[defaultHostName, state]' -o json
+echo ""
+echo "----------------------------------"
 
 done
+
+#cosmosAccountName="invincible-$userid-cosmos"
+#echo 
+#az webapp stop [--ids]
+#               [--name]
+#               [--resource-group]
+#               [--slot]
+#               [--subscription]
+
+#az cosmosdb database list
+#    --name invincible-aplymal-cosmos 
+#   --resource-group invincible-aplymal-eastus 
+
+#az cosmosdb update \
+#   --name invincible-aplymal-cosmos \
+#   --resource-group invincible-aplymal-eastus \
+#   --default-consistency-level Session \
+#   --enable-multiple-write-locations \
+#   --enable-automatic-failover \
+#   --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+#   --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+#   --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True #   --locations regionName=$location4 failoverPriority=4 isZoneRedundant=True 
