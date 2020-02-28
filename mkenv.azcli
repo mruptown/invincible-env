@@ -108,7 +108,7 @@ newLoadBalancingSettingsId=$(az network front-door load-balancing create \
 az network front-door update \
     -n $frontDoorName \
     -g $resourceGroupName \
-    --set backendPools[0].loadBalancingSettings[0].id="$newLoadBalancingSettingsId"
+    --set backendPools[0].loadBalancingSettings.id="$newLoadBalancingSettingsId"
 
 # Delete the old load balancing setting
 az network front-door load-balancing delete \
