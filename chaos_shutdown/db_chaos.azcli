@@ -1,0 +1,56 @@
+#Login
+az login
+
+#Resource Groups
+userid=$(whoami)
+resourceGroupName="invincible-$userid-eastus"
+location1="eastus"
+location2="westeurope"
+location3="southeastasia"
+
+cosmosAccountName="invincible-$userid-cosmos"
+
+all_locations()
+{
+location=$1        
+echo "$location database being readded"
+
+        az cosmosdb update \
+          --name $cosmosAccountName \
+          --resource-group $resourceGroupName \
+          --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+          --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+          --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
+}
+
+echo "$location1 database being removed"   
+        az cosmosdb update \
+          --name $cosmosAccountName \
+          --resource-group $resourceGroupName \
+          --locations regionName=$location2 failoverPriority=0 isZoneRedundant=True \
+          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
+
+sleep 5
+
+all_locations $location1
+
+echo "$location2 database being removed"   
+        az cosmosdb update \
+          --name $cosmosAccountName \
+          --resource-group $resourceGroupName \
+          --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
+
+sleep 5
+
+all_locations $location2
+
+echo "$location3 database being removed"   
+        az cosmosdb update \
+          --name $cosmosAccountName \
+          --resource-group $resourceGroupName \
+          --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+          --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True
+
+sleep 5
+all_locations $location3
