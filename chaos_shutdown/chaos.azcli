@@ -6,10 +6,9 @@ az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
 
-while true
-do
+cycle_two_regions() {
         # Loop over each  
-        for location in eastus westeurope southeastasia
+        for location in $1 $2
         do
                 # Create Variables for app names
                 appServiceName="invincible-$userid-appservice-$location"
@@ -20,8 +19,6 @@ do
                         -g $resourceGroupName \
                         -n $appName 
 
-                sleep 20
-
                 status=$(az webapp show \
                         -g $resourceGroupName \
                         -n $appName \
@@ -29,14 +26,17 @@ do
                         -o tsv)
 
                 echo "$location is now: $status"
+        done
 
+        sleep 60
+
+        for location in $1 $2
+        do
                 echo "Starting $location"
                 az webapp start \
                         -g $resourceGroupName \
                         -n $appName 
 
-                sleep 20
-
                 status=$(az webapp show \
                         -g $resourceGroupName \
                         -n $appName \
@@ -44,6 +44,12 @@ do
                         -o tsv)
 
                 echo "$location is now: $status"
-
         done
+}
+
+while true
+do
+        cycle_two_regions eastus westeurope
+        cycle_two_regions westeurope southeastasia
+        cycle_two_regions southeastasia eastus
 done
