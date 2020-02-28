@@ -1,0 +1,28 @@
+#Login
+az login
+az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
+
+#Resource Groups
+userid=$(whoami)
+resourceGroupName="invincible-$userid-eastus"
+location1="eastus"
+location2="westeurope"
+location3="southeastasia"
+location4="eastus2"
+
+cosmosAccountName="invincible-$userid-cosmos"
+
+az cosmosdb database list \
+   --name $cosmosAccountName \
+   --resource-group $resourceGroupName 
+
+az cosmosdb update \
+   --name $cosmosAccountName \
+   --resource-group $resourceGroupName \
+   --default-consistency-level Session \
+   --enable-multiple-write-locations \
+   --enable-automatic-failover \
+   --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+   --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+   --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True \
+   --locations regionName=$location4 failoverPriority=4 isZoneRedundant=True 
