@@ -89,3 +89,10 @@ az network front-door backend-pool backend add \
     -f $frontDoorName \
     --pool-name DefaultBackendPool \
     -g $resourceGroupName
+
+# Probe every 5 seconds (the minimum) rather than the default 30 seconds
+az network front-door probe update \
+    -f $frontDoorName \
+    --interval 5 \
+    -n DefaultProbeSettings \
+    -g $resourceGroupName
