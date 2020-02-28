@@ -6,11 +6,8 @@ az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
 az group create --name $resourceGroupName --location eastus
-location1="eastus"
-location2="westeurope"
-location3="southeastasia"
 
-# Create the CosmosDB account   
+# Create the CosmosDB account; regions are hard-coded   
 cosmosAccountName="invincible-$userid-cosmos"
 az cosmosdb create \
     -n $cosmosAccountName \
@@ -19,9 +16,9 @@ az cosmosdb create \
     --enable-multiple-write-locations true \
     --enable-automatic-failover true \
     --kind=MongoDB \
-    --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-    --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
-    --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
+    --locations regionName=eastus failoverPriority=0 isZoneRedundant=True \
+    --locations regionName=westeurope failoverPriority=1 isZoneRedundant=True \
+    --locations regionName=southeastasia failoverPriority=2 isZoneRedundant=True
 
 # Create a MongoDB database and container
 databaseName="invincible-db"
