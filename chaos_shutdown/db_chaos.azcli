@@ -13,8 +13,8 @@ cosmosAccountName="invincible-$userid-cosmos"
 
 all_locations()
 {
-        location=$1
-        echo "$location database being readded"
+location=$1        
+echo "$location database being readded"
 
         az cosmosdb update \
           --name $cosmosAccountName \
