@@ -6,11 +6,8 @@ az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
 az group create --name $resourceGroupName --location eastus
-location1="eastus"
-location2="westeurope"
-location3="southeastasia"
 
-# Create the CosmosDB account   
+# Create the CosmosDB account; regions are hard-coded   
 cosmosAccountName="invincible-$userid-cosmos"
 az cosmosdb create \
     -n $cosmosAccountName \
@@ -19,9 +16,9 @@ az cosmosdb create \
     --enable-multiple-write-locations true \
     --enable-automatic-failover true \
     --kind=MongoDB \
-    --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-    --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
-    --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
+    --locations regionName=eastus failoverPriority=0 isZoneRedundant=True \
+    --locations regionName=westeurope failoverPriority=1 isZoneRedundant=True \
+    --locations regionName=southeastasia failoverPriority=2 isZoneRedundant=True
 
 # Create a MongoDB database and container
 databaseName="invincible-db"
@@ -88,4 +85,33 @@ az network front-door backend-pool backend add \
     --address "invincible-app-$userid-southeastasia.azurewebsites.net" \
     -f $frontDoorName \
     --pool-name DefaultBackendPool \
+    -g $resourceGroupName
+
+# Probe every 5 seconds (the minimum) rather than the default 30 seconds
+az network front-door probe update \
+    -f $frontDoorName \
+    --interval 5 \
+    -n DefaultProbeSettings \
+    -g $resourceGroupName
+
+# Set the failure settings to be very strict
+newLoadBalancingSettingsId=$(az network front-door load-balancing create \
+    -f $frontDoorName \
+    -n NewLoadBalancingSettings \
+    -g $resourceGroupName \
+    --sample-size 1 \
+    --successful-samples-required 1 \
+    --query id \
+    --output tsv)
+
+# Update the default load balancing settings to be the new one we just created
+az network front-door update \
+    -n $frontDoorName \
+    -g $resourceGroupName \
+    --set backendPools[0].loadBalancingSettings.id="$newLoadBalancingSettingsId"
+
+# Delete the old load balancing setting
+az network front-door load-balancing delete \
+    -f $frontDoorName \
+    -n DefaultLoadBalancingSettings \
     -g $resourceGroupName

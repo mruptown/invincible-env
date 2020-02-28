@@ -6,31 +6,43 @@ az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
 
-while true
-do
+cycle_two_regions() {
+        
         # Loop over each  
-        for location in eastus westeurope southeastasia
+        for location in $1 $2
         do
                 # Create Variables for app names
                 appServiceName="invincible-$userid-appservice-$location"
                 appName="invincible-app-$userid-$location"
-
-                status=$(az webapp show \
-                        -g $resourceGroupName \
-                        -n $appName \
-                        --query state \
-                        -o tsv)
-
-                echo "$location is now: $status"
-
-                sleep 2
 
                 echo "Stopping $location"
                 az webapp stop \
                         -g $resourceGroupName \
                         -n $appName 
 
-                sleep 2 
+                status=$(az webapp show \
+                        -g $resourceGroupName \
+                        -n $appName \
+                        --query state \
+                        -o tsv)
+
+                echo "$location is now: $status"
+
+                sleep 2
+        done
+
+        sleep 60
+
+        for location in $1 $2
+        do
+                # Create Variables for app names
+                appServiceName="invincible-$userid-appservice-$location"
+                appName="invincible-app-$userid-$location"
+
+                echo "Starting $location"
+                az webapp start \
+                        -g $resourceGroupName \
+                        -n $appName 
 
                 status=$(az webapp show \
                         -g $resourceGroupName \
@@ -41,13 +53,12 @@ do
                 echo "$location is now: $status"
 
                 sleep 2
-
-                echo "Starting $location"
-                az webapp start \
-                        -g $resourceGroupName \
-                        -n $appName 
-
-                sleep 2
-
         done
+}
+
+while true
+do
+        cycle_two_regions eastus westeurope
+        cycle_two_regions westeurope southeastasia
+        cycle_two_regions southeastasia eastus
 done
