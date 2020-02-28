@@ -7,6 +7,7 @@ userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
 
 cycle_two_regions() {
+        
         # Loop over each  
         for location in $1 $2
         do
@@ -26,12 +27,18 @@ cycle_two_regions() {
                         -o tsv)
 
                 echo "$location is now: $status"
+
+                sleep 2
         done
 
         sleep 60
 
         for location in $1 $2
         do
+                # Create Variables for app names
+                appServiceName="invincible-$userid-appservice-$location"
+                appName="invincible-app-$userid-$location"
+
                 echo "Starting $location"
                 az webapp start \
                         -g $resourceGroupName \
@@ -44,6 +51,8 @@ cycle_two_regions() {
                         -o tsv)
 
                 echo "$location is now: $status"
+
+                sleep 2
         done
 }
 
