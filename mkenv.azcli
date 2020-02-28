@@ -1,78 +1,91 @@
 #Login
-#az login
+az login 
 az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 
 #Resource Groups
 userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
+az group create --name $resourceGroupName --location eastus
 location1="eastus"
 location2="westeurope"
 location3="southeastasia"
-location4="eastus2"
+
+# Create the CosmosDB account   
+cosmosAccountName="invincible-$userid-cosmos"
+az cosmosdb create \
+    -n $cosmosAccountName \
+    -g $resourceGroupName \
+    --default-consistency-level Session \
+    --enable-multiple-write-locations true \
+    --enable-automatic-failover true \
+    --kind=MongoDB \
+    --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
+    --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+    --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True
+
+# Create a MongoDB database and container
+databaseName="invincible-db"
+az cosmosdb mongodb database create \
+    -a $cosmosAccountName \
+    -g $resourceGroupName \
+    -n $databaseName
+
+# Retrieve database user, password, and connection string
+mongoDbConnectionString=$(az cosmosdb list-connection-strings \
+    -n $cosmosAccountName \
+    -g $resourceGroupName \
+    --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
+    --output tsv)
 
 # Create webapps in a loop
 for location in eastus westeurope southeastasia
 do
-    # Create Variables for app names
+    # Create an App Service for the WebApp
     appServiceName="invincible-$userid-appservice-$location"
+
+    az appservice plan create \
+        -g $resourceGroupName \
+        -n $appServiceName \
+        -l $location \
+        --is-linux
+
+    # Create the webapp definitions
     appName="invincible-app-$userid-$location"
 
-echo "Current State"
-az webapp show \
+    site=$(az webapp create \
+        -g $resourceGroupName \
+        -p $appServiceName \
+        -n $appName \
+        -r 'NODE|12.9' \
+        --query hostNames \
+        --output tsv)
+
+    # Set database connection string as an environment variable on the webapp servers
+    az webapp config appsettings set \
         -g $resourceGroupName \
         -n $appName \
---query '[defaultHostName, state]' -o json
-
-echo "Stopping $appName"
-az webapp stop \
-        -g $resourceGroupName \
-        -n $appName \
-
-sleep 2 
-echo ""
-echo "Current State"
-az webapp show \
-        -g $resourceGroupName \
-        -n $appName \
---query '[defaultHostName, state]' -o json
-
-echo ""
-sleep 2
-
-echo "Starting $appName"
-az webapp start \
-        -g $resourceGroupName \
-        -n $appName \
-
-echo ""
-echo "Current State"
-az webapp show \
-        -g $resourceGroupName \
-        -n $appName \
---query '[defaultHostName, state]' -o json
-echo ""
-echo "----------------------------------"
+        --settings DB_CONN="$mongoDbConnectionString"
 
 done
 
-#cosmosAccountName="invincible-$userid-cosmos"
-#echo 
-#az webapp stop [--ids]
-#               [--name]
-#               [--resource-group]
-#               [--slot]
-#               [--subscription]
+az extension add --name front-door
 
-#az cosmosdb database list
-#    --name invincible-aplymal-cosmos 
-#   --resource-group invincible-aplymal-eastus 
+# Create the front door
+frontDoorName="invincible-$userid-fd"
+az network front-door create \
+    --backend-address "invincible-app-$userid-eastus.azurewebsites.net" \
+    -n $frontDoorName \
+    -g $resourceGroupName
 
-#az cosmosdb update \
-#   --name invincible-aplymal-cosmos \
-#   --resource-group invincible-aplymal-eastus \
-#   --default-consistency-level Session \
-#   --enable-multiple-write-locations \
-#   --enable-automatic-failover \
-#   --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-#   --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
-#   --locations regionName=$location3 failoverPriority=2 isZoneRedundant=True #   --locations regionName=$location4 failoverPriority=4 isZoneRedundant=True 
+# Assign additional Web Apps as an Endpoint for high-availabilty; use default backend pool name
+az network front-door backend-pool backend add \
+    --address "invincible-app-$userid-westeurope.azurewebsites.net" \
+    -f $frontDoorName \
+    --pool-name DefaultBackendPool \
+    -g $resourceGroupName
+
+az network front-door backend-pool backend add \
+    --address "invincible-app-$userid-southeastasia.azurewebsites.net" \
+    -f $frontDoorName \
+    --pool-name DefaultBackendPool \
+    -g $resourceGroupName
