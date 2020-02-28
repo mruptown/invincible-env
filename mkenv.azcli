@@ -37,56 +37,6 @@ mongoDbConnectionString=$(az cosmosdb list-connection-strings \
     --query "connectionStrings[?description == 'Primary MongoDB Connection String'].connectionString" \
     --output tsv)
 
-az extension add --name front-door
-
-# Create the front door
-frontDoorName="invincible-$userid-fd"
-randomNumber=$(uuidgen)
-az network front-door create \
-    --backend-address "invincible-fdbep-$randomNumber.azurefd.net" \
-    -n $frontDoorName \
-    -g $resourceGroupName
-
-# az network front-door frontend-endpoint create \
-#     -f $frontDoorName \
-#     --host-name $frontDoorName.azurefd.net \
-#     -n invincible-fd-feep \
-#     -g $resourceGroupName
-
-az network front-door probe create \
-    -f $frontDoorName \
-    --interval 5 \
-    -n invincible-probe \
-    -g $resourceGroupName \
-    --probeMethod GET \
-    --path "/"
-
-az network front-door load-balancing create \
-    -f $frontDoorName \
-    -n invincible-lb \
-    -g $resourceGroupName \
-    --sample-size 3 \
-    --successful-samples-required 3
-
-az network front-door backend-pool create \
-    --address "invincible-fdbep-$randomNumber.azurefd.net" \
-    -f $frontDoorName \
-    -n invincible-fd-bep \
-    --load-balancing invincible-lb \
-    --probe invincible-probe \
-    -g $resourceGroupName
-
-# Need to update the default routing rule
-# backendPoolId=$(az network front-door backend-pool show -n invincible-fd-bep -f invincible-jwiegm-fd --query id --output tsv)
-
-# az network front-door routing-rule create \
-#     -f $frontDoorName \
-#     --frontend-endpoints invincible-fd-feep \
-#     -n invincible-fd-rr \
-#     -g $resourceGroupName \
-#     --route-type Forward \
-#     --backend-pool invincible-fd-bep
-
 # Create webapps in a loop
 for location in eastus westeurope southeastasia
 do
@@ -110,13 +60,6 @@ do
         --query hostNames \
         --output tsv)
 
-    # Assign each Web App as an Endpoint for high-availabilty
-    az network front-door backend-pool backend add \
-        --address $site \
-        -f $frontDoorName \
-        --pool-name invincible-fd-bep \
-        -g $resourceGroupName
-
     # Set database connection string as an environment variable on the webapp servers
     az webapp config appsettings set \
         -g $resourceGroupName \
@@ -124,3 +67,25 @@ do
         --settings DB_CONN="$mongoDbConnectionString"
 
 done
+
+az extension add --name front-door
+
+# Create the front door
+frontDoorName="invincible-$userid-fd"
+az network front-door create \
+    --backend-address "invincible-app-$userid-eastus.azurewebsites.net" \
+    -n $frontDoorName \
+    -g $resourceGroupName
+
+# Assign additional Web Apps as an Endpoint for high-availabilty; use default backend pool name
+az network front-door backend-pool backend add \
+    --address "invincible-app-$userid-westeurope.azurewebsites.net" \
+    -f $frontDoorName \
+    --pool-name DefaultBackendPool \
+    -g $resourceGroupName
+
+az network front-door backend-pool backend add \
+    --address "invincible-app-$userid-southeastasia.azurewebsites.net" \
+    -f $frontDoorName \
+    --pool-name DefaultBackendPool \
+    -g $resourceGroupName
