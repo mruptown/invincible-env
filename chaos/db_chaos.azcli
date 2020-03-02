@@ -47,7 +47,7 @@ echo "$location2 database being removed"
           --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True \
           --output none
 
-sleep 5
+sleep 15
 #add back in location
 all_locations $location2 $location1 $location3
 
