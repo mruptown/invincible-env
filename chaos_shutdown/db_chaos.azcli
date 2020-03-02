@@ -14,7 +14,6 @@ all_locations()
 {
 location=$1  
 
-echo time
 echo "$location database being re-added"
 
         az cosmosdb update \
