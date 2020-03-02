@@ -1,5 +1,5 @@
 #Login
-#az login
+az login
 
 #Resource Groups
 userid=$(whoami)
