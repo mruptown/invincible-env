@@ -115,3 +115,4 @@ az network front-door load-balancing delete \
     -f $frontDoorName \
     -n DefaultLoadBalancingSettings \
     -g $resourceGroupName
+    
