@@ -10,17 +10,35 @@ location3="southeastasia"
 
 cosmosAccountName="invincible-$userid-cosmos"
 
+all_locations()
+{
+location=$1  
+
+echo time
+echo "$location database being re-added"
+
+        az cosmosdb update \
+          --name $cosmosAccountName \
+          --resource-group $resourceGroupName \
+          --locations regionName=$2 failoverPriority=0 isZoneRedundant=True \
+          --locations regionName=$3 failoverPriority=1 isZoneRedundant=True \
+          --locations regionName=$1 failoverPriority=2 isZoneRedundant=True \
+          --output none
+          echo "$location database re-add COMPELTE"
+          echo "---------"
+}
+
 echo "$location1 database being removed"   
         az cosmosdb update \
           --name $cosmosAccountName \
           --resource-group $resourceGroupName \
           --locations regionName=$location2 failoverPriority=0 isZoneRedundant=True \
-          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
+          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True \
+          --output none
 
 sleep 5
 #add back in location1 
 all_locations $location1 $location2 $location3
-
 
 ###remove easteurope
 echo "$location2 database being removed"   
@@ -28,7 +46,8 @@ echo "$location2 database being removed"
           --name $cosmosAccountName \
           --resource-group $resourceGroupName \
           --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True
+          --locations regionName=$location3 failoverPriority=1 isZoneRedundant=True \
+          --output none
 
 sleep 5
 #add back in location
@@ -39,28 +58,8 @@ echo "$location3 database being removed"
           --name $cosmosAccountName \
           --resource-group $resourceGroupName \
           --locations regionName=$location1 failoverPriority=0 isZoneRedundant=True \
-          --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True
+          --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True \
+          --output none
 
 sleep 5
 all_locations $location3 $location1 $location2
-
-
-all_locations()
-{
-
-location=$1  
-p0=$2
-p1=$3
-
-echo time
-echo "$location database being readded"
-
- echo     az cosmosdb update \
-          --name $cosmosAccountName \
-          --resource-group $resourceGroupName \
-          --locations regionName=$p0 failoverPriority=0 isZoneRedundant=True \
-          --locations regionName=$p1 failoverPriority=1 isZoneRedundant=True \
-          --locations regionName=$location failoverPriority=2 isZoneRedundant=True
-          echo "$location database readd COMPELTE"
-          echo "---------"
-}
