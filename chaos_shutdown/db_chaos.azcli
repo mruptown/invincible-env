@@ -59,4 +59,4 @@ echo "$location3 database being removed"
           --locations regionName=$location2 failoverPriority=1 isZoneRedundant=True
 
 sleep 5
-all_locations $location3 $location1 $location3
+all_locations $location3 $location1 $location2
