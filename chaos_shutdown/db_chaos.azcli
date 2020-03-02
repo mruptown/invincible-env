@@ -23,7 +23,7 @@ echo "$location database being re-added"
           --locations regionName=$3 failoverPriority=1 isZoneRedundant=True \
           --locations regionName=$1 failoverPriority=2 isZoneRedundant=True \
           --output none
-          echo "$location database re-add COMPELTE"
+          echo "$location database re-add COMPLETE"
           echo "---------"
 }
 
