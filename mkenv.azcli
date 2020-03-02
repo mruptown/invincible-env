@@ -1,6 +1,5 @@
 #Login
 az login 
-az account set --subscription f2ca3d4d-05e5-4001-a135-49839f1ea51f
 
 #Resource Groups
 userid=$(whoami)
