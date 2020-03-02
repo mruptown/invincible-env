@@ -1,5 +1,5 @@
 #Login
-az login
+az login -o none
 
 #Resource Groups
 userid=$(whoami)
