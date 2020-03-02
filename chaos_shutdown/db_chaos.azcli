@@ -2,30 +2,13 @@
 #az login
 
 #Resource Groups
-userid=jwiegm
+userid=$(whoami)
 resourceGroupName="invincible-$userid-eastus"
 location1="eastus"
 location2="westeurope"
 location3="southeastasia"
 
 cosmosAccountName="invincible-$userid-cosmos"
-
-all_locations()
-{
-
-location=$1  
-
-echo "$location database being readded"
-
- echo     az cosmosdb update \
-          --name $cosmosAccountName \
-          --resource-group $resourceGroupName \
-          --locations regionName=$2 failoverPriority=0 isZoneRedundant=True \
-          --locations regionName=$3 failoverPriority=1 isZoneRedundant=True \
-          --locations regionName=$1 failoverPriority=2 isZoneRedundant=True
-
-          echo "---------"
-}
 
 echo "$location1 database being removed"   
         az cosmosdb update \
@@ -60,3 +43,24 @@ echo "$location3 database being removed"
 
 sleep 5
 all_locations $location3 $location1 $location2
+
+
+all_locations()
+{
+
+location=$1  
+p0=$2
+p1=$3
+
+echo time
+echo "$location database being readded"
+
+ echo     az cosmosdb update \
+          --name $cosmosAccountName \
+          --resource-group $resourceGroupName \
+          --locations regionName=$p0 failoverPriority=0 isZoneRedundant=True \
+          --locations regionName=$p1 failoverPriority=1 isZoneRedundant=True \
+          --locations regionName=$location failoverPriority=2 isZoneRedundant=True
+          echo "$location database readd COMPELTE"
+          echo "---------"
+}
