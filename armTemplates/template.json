@@ -12,6 +12,7 @@
         "cosmosName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-cosmos')]",
         "frontDoorName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-afd')]",
         "appName": "[concat(parameters('appName'), '-', variables('randomAppName'))]",
+        "location": "[resourceGroup().location]",
         "appLocations": [
             "eastus",
             "centralus",
@@ -24,7 +25,7 @@
             "type": "Microsoft.DocumentDB/databaseAccounts",
             "apiVersion": "2019-12-12",
             "name": "[variables('cosmosName')]",
-            "location": "East US",
+            "location": "[variables('location')]",
             "kind": "MongoDB",
             "properties": {
                 "enableAutomaticFailover": true,
@@ -38,24 +39,19 @@
                     "maxIntervalInSeconds": 5,
                     "maxStalenessPrefix": 100
                 },
-                "locations": [
+                "copy": [
                     {
-                        "locationName": "East US",
-                        "provisioningState": "Succeeded",
-                        "failoverPriority": 0,
-                        "isZoneRedundant": true
-                    },
-                    {
-                        "locationName": "West Europe",
-                        "provisioningState": "Succeeded",
-                        "failoverPriority": 1,
-                        "isZoneRedundant": true
-                    },
-                    {
-                        "locationName": "Southeast Asia",
-                        "provisioningState": "Succeeded",
-                        "failoverPriority": 2,
-                        "isZoneRedundant": true
+                        "name": "locations",
+                        "count": "[length(variables('appLocations'))]",
+                        "input": {
+                            "locations": [
+                                {
+                                    "locationName": "[variables('appLocations')[copyIndex('locations')]]",
+                                    "failoverPriority": "[copyIndex('locations')]",
+                                    "isZoneRedundant": true
+                                }
+                            ]
+                        }
                     }
                 ],
                 "capabilities": []
@@ -66,7 +62,7 @@
             "apiVersion": "2018-08-01",
             "name": "[variables('frontDoorName')]",
             "location": "Global",
-            "dependsOn": [ "webLoop" ],
+            "dependsOn": [ "bindingLoop" ],
             "properties": {
                 "resourceState": "Enabled",
                 "backendPools": [
@@ -289,151 +285,7 @@
                 "httpLoggingEnabled": false,
                 "logsDirectorySizeLimit": 35,
                 "detailedErrorLoggingEnabled": false,
-                "publishingUsername": "$invincible-app-linuxadmin-eastus",
-                "scmType": "None",
-                "use32BitWorkerProcess": true,
-                "webSocketsEnabled": false,
-                "alwaysOn": false,
-                "managedPipelineMode": "Integrated",
-                "virtualApplications": [
-                    {
-                        "virtualPath": "/",
-                        "physicalPath": "site\\wwwroot",
-                        "preloadEnabled": false
-                    }
-                ],
-                "loadBalancing": "LeastRequests",
-                "experiments": {
-                    "rampUpRules": []
-                },
-                "autoHealEnabled": false,
-                "localMySqlEnabled": false,
-                "ipSecurityRestrictions": [
-                    {
-                        "ipAddress": "Any",
-                        "action": "Allow",
-                        "priority": 1,
-                        "name": "Allow all",
-                        "description": "Allow all access"
-                    }
-                ],
-                "scmIpSecurityRestrictions": [
-                    {
-                        "ipAddress": "Any",
-                        "action": "Allow",
-                        "priority": 1,
-                        "name": "Allow all",
-                        "description": "Allow all access"
-                    }
-                ],
-                "scmIpSecurityRestrictionsUseMain": false,
-                "http20Enabled": true,
-                "minTlsVersion": "1.2",
-                "ftpsState": "AllAllowed",
-                "reservedInstanceCount": 0
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites/config",
-            "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-southeastasia/web",
-            "location": "Southeast Asia",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', 'invincible-app-linuxadmin-southeastasia')]"
-            ],
-            "properties": {
-                "numberOfWorkers": 1,
-                "defaultDocuments": [
-                    "Default.htm",
-                    "Default.html",
-                    "Default.asp",
-                    "index.htm",
-                    "index.html",
-                    "iisstart.htm",
-                    "default.aspx",
-                    "index.php",
-                    "hostingstart.html"
-                ],
-                "netFrameworkVersion": "v4.0",
-                "linuxFxVersion": "NODE|12.9",
-                "requestTracingEnabled": false,
-                "remoteDebuggingEnabled": false,
-                "httpLoggingEnabled": false,
-                "logsDirectorySizeLimit": 35,
-                "detailedErrorLoggingEnabled": false,
-                "publishingUsername": "$invincible-app-linuxadmin-southeastasia",
-                "scmType": "None",
-                "use32BitWorkerProcess": true,
-                "webSocketsEnabled": false,
-                "alwaysOn": false,
-                "managedPipelineMode": "Integrated",
-                "virtualApplications": [
-                    {
-                        "virtualPath": "/",
-                        "physicalPath": "site\\wwwroot",
-                        "preloadEnabled": false
-                    }
-                ],
-                "loadBalancing": "LeastRequests",
-                "experiments": {
-                    "rampUpRules": []
-                },
-                "autoHealEnabled": false,
-                "localMySqlEnabled": false,
-                "ipSecurityRestrictions": [
-                    {
-                        "ipAddress": "Any",
-                        "action": "Allow",
-                        "priority": 1,
-                        "name": "Allow all",
-                        "description": "Allow all access"
-                    }
-                ],
-                "scmIpSecurityRestrictions": [
-                    {
-                        "ipAddress": "Any",
-                        "action": "Allow",
-                        "priority": 1,
-                        "name": "Allow all",
-                        "description": "Allow all access"
-                    }
-                ],
-                "scmIpSecurityRestrictionsUseMain": false,
-                "http20Enabled": true,
-                "minTlsVersion": "1.2",
-                "ftpsState": "AllAllowed",
-                "reservedInstanceCount": 0
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites/config",
-            "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-westeurope/web",
-            "location": "West Europe",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', 'invincible-app-linuxadmin-westeurope')]"
-            ],
-            "properties": {
-                "numberOfWorkers": 1,
-                "defaultDocuments": [
-                    "Default.htm",
-                    "Default.html",
-                    "Default.asp",
-                    "index.htm",
-                    "index.html",
-                    "iisstart.htm",
-                    "default.aspx",
-                    "index.php",
-                    "hostingstart.html"
-                ],
-                "netFrameworkVersion": "v4.0",
-                "linuxFxVersion": "NODE|12.9",
-                "requestTracingEnabled": false,
-                "remoteDebuggingEnabled": false,
-                "httpLoggingEnabled": false,
-                "logsDirectorySizeLimit": 35,
-                "detailedErrorLoggingEnabled": false,
-                "publishingUsername": "$invincible-app-linuxadmin-westeurope",
+                "publishingUsername": "[concat('$', variables('appName'), '-', variables('appLocations')[copyIndex()], '-web')]",
                 "scmType": "None",
                 "use32BitWorkerProcess": true,
                 "webSocketsEnabled": false,
@@ -480,39 +332,17 @@
         {
             "type": "Microsoft.Web/sites/hostNameBindings",
             "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-eastus/invincible-app-linuxadmin-eastus.azurewebsites.net",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '/', variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
             "location": "East US",
+            "copy": {
+                "count": "[length(variables('appLocations'))]",
+                "name": "bindingLoop"
+            },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', 'invincible-app-linuxadmin-eastus')]"
+                "configLoop"
             ],
             "properties": {
-                "siteName": "invincible-app-linuxadmin-eastus",
-                "hostNameType": "Verified"
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites/hostNameBindings",
-            "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-southeastasia/invincible-app-linuxadmin-southeastasia.azurewebsites.net",
-            "location": "Southeast Asia",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', 'invincible-app-linuxadmin-southeastasia')]"
-            ],
-            "properties": {
-                "siteName": "invincible-app-linuxadmin-southeastasia",
-                "hostNameType": "Verified"
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites/hostNameBindings",
-            "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-westeurope/invincible-app-linuxadmin-westeurope.azurewebsites.net",
-            "location": "West Europe",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', 'invincible-app-linuxadmin-westeurope')]"
-            ],
-            "properties": {
-                "siteName": "invincible-app-linuxadmin-westeurope",
+                "siteName": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()])]",
                 "hostNameType": "Verified"
             }
         }
