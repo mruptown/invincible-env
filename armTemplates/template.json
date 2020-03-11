@@ -81,34 +81,21 @@
                         "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/BackendPools/DefaultBackendPool')]",
                         "name": "DefaultBackendPool",
                         "properties": {
-                            "backends": [
+                            "copy": [
                                 {
-                                    "address": "invincible-app-linuxadmin-eastus.azurewebsites.net",
-                                    "httpPort": 80,
-                                    "httpsPort": 443,
-                                    "priority": 1,
-                                    "weight": 50,
-                                    "backendHostHeader": "invincible-app-linuxadmin-eastus.azurewebsites.net",
-                                    "enabledState": "Enabled"
-                                },
-                                {
-                                    "address": "invincible-app-linuxadmin-westeurope.azurewebsites.net",
-                                    "httpPort": 80,
-                                    "httpsPort": 443,
-                                    "priority": 1,
-                                    "weight": 50,
-                                    "backendHostHeader": "invincible-app-linuxadmin-westeurope.azurewebsites.net",
-                                    "enabledState": "Enabled"
-                                },
-                                {
-                                    "address": "invincible-app-linuxadmin-southeastasia.azurewebsites.net",
-                                    "httpPort": 80,
-                                    "httpsPort": 443,
-                                    "priority": 1,
-                                    "weight": 50,
-                                    "backendHostHeader": "invincible-app-linuxadmin-southeastasia.azurewebsites.net",
-                                    "enabledState": "Enabled"
+                                    "name": "backends",
+                                    "count": "[length(variables('appLocations'))]",
+                                    "input": {
+                                        "address": "invincible-app-linuxadmin-eastus.azurewebsites.net",
+                                        "httpPort": 80,
+                                        "httpsPort": 443,
+                                        "priority": 1,
+                                        "weight": 50,
+                                        "backendHostHeader": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
+                                        "enabledState": "Enabled"
+                                    }
                                 }
+
                             ],
                             "healthProbeSettings": {
                                 "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/healthProbeSettings/DefaultProbeSettings')]"
@@ -158,12 +145,12 @@
                 ],
                 "routingRules": [
                     {
-                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', 'invincible-linuxadmin-fd'), '/RoutingRules/DefaultRoutingRule')]",
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/RoutingRules/DefaultRoutingRule')]",
                         "name": "DefaultRoutingRule",
                         "properties": {
                             "frontendEndpoints": [
                                 {
-                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', 'invincible-linuxadmin-fd'), '/frontendEndpoints/DefaultFrontendEndpoint')]"
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/frontendEndpoints/DefaultFrontendEndpoint')]"
                                 }
                             ],
                             "acceptedProtocols": [
@@ -174,7 +161,7 @@
                             ],
                             "forwardingProtocol": "MatchRequest",
                             "backendPool": {
-                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', 'invincible-linuxadmin-fd'), '/backendPools/DefaultBackendPool')]"
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/backendPools/DefaultBackendPool')]"
                             },
                             "enabledState": "Enabled",
                             "resourceState": "Enabled"
