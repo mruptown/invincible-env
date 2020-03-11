@@ -86,12 +86,12 @@
                                     "name": "backends",
                                     "count": "[length(variables('appLocations'))]",
                                     "input": {
-                                        "address": "invincible-app-linuxadmin-eastus.azurewebsites.net",
+                                        "address": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], '-web.azurewebsites.net')]",
                                         "httpPort": 80,
                                         "httpsPort": 443,
                                         "priority": 1,
                                         "weight": 50,
-                                        "backendHostHeader": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
+                                        "backendHostHeader": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], '-web.azurewebsites.net')]",
                                         "enabledState": "Enabled"
                                     }
                                 }
