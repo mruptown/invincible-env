@@ -10,6 +10,7 @@
     "variables": {
         "randomAppName": "[take(uniqueString(resourceGroup().id, deployment().name), 6)]",
         "cosmosName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-cosmos')]",
+        "dbName": "[concat(parameters('appName'), '-db')]",
         "frontDoorName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-afd')]",
         "appName": "[concat(parameters('appName'), '-', variables('randomAppName'))]",
         "location": "[resourceGroup().location]",
@@ -44,17 +45,27 @@
                         "name": "locations",
                         "count": "[length(variables('appLocations'))]",
                         "input": {
-                            "locations": [
-                                {
-                                    "locationName": "[variables('appLocations')[copyIndex('locations')]]",
-                                    "failoverPriority": "[copyIndex('locations')]",
-                                    "isZoneRedundant": true
-                                }
-                            ]
+                            "locationName": "[variables('appLocations')[copyIndex('locations')]]",
+                            "failoverPriority": "[copyIndex('locations')]",
+                            "isZoneRedundant": false
                         }
                     }
                 ],
                 "capabilities": []
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(variables('cosmosName'), '/', variables('dbName'))]",
+            "dependsOn": [
+                "[variables('cosmosName')]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "[variables('dbName')]"
+                },
+                "options": {}
             }
         },
         {
@@ -200,20 +211,6 @@
                 "hyperV": false,
                 "targetWorkerCount": 0,
                 "targetWorkerSizeId": 0
-            }
-        },
-        {
-            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
-            "apiVersion": "2019-12-12",
-            "name": "invincible-linuxadmin-cosmos/invincible-db",
-            "dependsOn": [
-                "[resourceId('Microsoft.DocumentDB/databaseAccounts', 'invincible-linuxadmin-cosmos')]"
-            ],
-            "properties": {
-                "resource": {
-                    "id": "invincible-db"
-                },
-                "options": {}
             }
         },
         {
