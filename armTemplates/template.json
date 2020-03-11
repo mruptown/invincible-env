@@ -8,13 +8,22 @@
         }
     },
     "variables": {
-        "randomAppName": ""
+        "randomAppName": "[take(uniqueString(resourceGroup().id, deployment().name), 6)]",
+        "cosmosName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-cosmos')]",
+        "frontDoorName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-afd')]",
+        "appName": "[concat(parameters('appName'), '-', variables('randomAppName'))]",
+        "appLocations": [
+            "eastus",
+            "centralus",
+            "westcentralus",
+            "westus2"
+        ]
     },
     "resources": [
         {
             "type": "Microsoft.DocumentDB/databaseAccounts",
             "apiVersion": "2019-12-12",
-            "name": "invincible-linuxadmin-cosmos",
+            "name": "[variables('cosmosName')]",
             "location": "East US",
             "kind": "MongoDB",
             "properties": {
@@ -55,13 +64,14 @@
         {
             "type": "Microsoft.Network/frontdoors",
             "apiVersion": "2018-08-01",
-            "name": "invincible-linuxadmin-fd",
+            "name": "[variables('frontDoorName')]",
             "location": "Global",
+            "dependsOn": [],
             "properties": {
                 "resourceState": "Enabled",
                 "backendPools": [
                     {
-                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', 'invincible-linuxadmin-fd'), '/BackendPools/DefaultBackendPool')]",
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/BackendPools/DefaultBackendPool')]",
                         "name": "DefaultBackendPool",
                         "properties": {
                             "backends": [
@@ -171,8 +181,12 @@
         {
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2018-02-01",
-            "name": "invincible-linuxadmin-appservice-eastus",
-            "location": "East US",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-app')]",
+            "copy": {
+                "count": "[length(variables('appLocations'))]",
+                "name": "appLoop"
+            },
+            "location": "[variables('appLocations')[copyIndex()]]",
             "sku": {
                 "name": "B1",
                 "tier": "Basic",
@@ -185,57 +199,6 @@
                 "perSiteScaling": false,
                 "maximumElasticWorkerCount": 1,
                 "isSpot": false,
-                "freeOfferExpirationTime": "2020-04-05T18:57:00.03",
-                "reserved": true,
-                "isXenon": false,
-                "hyperV": false,
-                "targetWorkerCount": 0,
-                "targetWorkerSizeId": 0
-            }
-        },
-        {
-            "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2018-02-01",
-            "name": "invincible-linuxadmin-appservice-southeastasia",
-            "location": "Southeast Asia",
-            "sku": {
-                "name": "B1",
-                "tier": "Basic",
-                "size": "B1",
-                "family": "B",
-                "capacity": 1
-            },
-            "kind": "linux",
-            "properties": {
-                "perSiteScaling": false,
-                "maximumElasticWorkerCount": 1,
-                "isSpot": false,
-                "freeOfferExpirationTime": "2020-04-05T19:00:16.4533333",
-                "reserved": true,
-                "isXenon": false,
-                "hyperV": false,
-                "targetWorkerCount": 0,
-                "targetWorkerSizeId": 0
-            }
-        },
-        {
-            "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2018-02-01",
-            "name": "invincible-linuxadmin-appservice-westeurope",
-            "location": "West Europe",
-            "sku": {
-                "name": "B1",
-                "tier": "Basic",
-                "size": "B1",
-                "family": "B",
-                "capacity": 1
-            },
-            "kind": "linux",
-            "properties": {
-                "perSiteScaling": false,
-                "maximumElasticWorkerCount": 1,
-                "isSpot": false,
-                "freeOfferExpirationTime": "2020-04-05T18:58:35.6933333",
                 "reserved": true,
                 "isXenon": false,
                 "hyperV": false,
@@ -260,101 +223,29 @@
         {
             "type": "Microsoft.Web/sites",
             "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-eastus",
-            "location": "East US",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', 'invincible-linuxadmin-appservice-eastus')]"
-            ],
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web')]",
+            "location": "[variables('appLocations')[copyIndex()]]",
+            "copy": {
+                "count": "[length(variables('appLocations'))]",
+                "name": "webLoop"
+            },
+            "dependsOn": [ "appLoop" ],
             "kind": "app,linux",
             "properties": {
                 "enabled": true,
                 "hostNameSslStates": [
                     {
-                        "name": "invincible-app-linuxadmin-eastus.azurewebsites.net",
+                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
                         "sslState": "Disabled",
                         "hostType": "Standard"
                     },
                     {
-                        "name": "invincible-app-linuxadmin-eastus.scm.azurewebsites.net",
+                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.scm.azurewebsites.net')]",
                         "sslState": "Disabled",
                         "hostType": "Repository"
                     }
                 ],
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'invincible-linuxadmin-appservice-eastus')]",
-                "reserved": true,
-                "isXenon": false,
-                "hyperV": false,
-                "scmSiteAlsoStopped": false,
-                "clientAffinityEnabled": true,
-                "clientCertEnabled": false,
-                "hostNamesDisabled": false,
-                "containerSize": 0,
-                "dailyMemoryTimeQuota": 0,
-                "httpsOnly": false,
-                "redundancyMode": "None"
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites",
-            "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-southeastasia",
-            "location": "Southeast Asia",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', 'invincible-linuxadmin-appservice-southeastasia')]"
-            ],
-            "kind": "app,linux",
-            "properties": {
-                "enabled": true,
-                "hostNameSslStates": [
-                    {
-                        "name": "invincible-app-linuxadmin-southeastasia.azurewebsites.net",
-                        "sslState": "Disabled",
-                        "hostType": "Standard"
-                    },
-                    {
-                        "name": "invincible-app-linuxadmin-southeastasia.scm.azurewebsites.net",
-                        "sslState": "Disabled",
-                        "hostType": "Repository"
-                    }
-                ],
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'invincible-linuxadmin-appservice-southeastasia')]",
-                "reserved": true,
-                "isXenon": false,
-                "hyperV": false,
-                "scmSiteAlsoStopped": false,
-                "clientAffinityEnabled": true,
-                "clientCertEnabled": false,
-                "hostNamesDisabled": false,
-                "containerSize": 0,
-                "dailyMemoryTimeQuota": 0,
-                "httpsOnly": false,
-                "redundancyMode": "None"
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites",
-            "apiVersion": "2018-11-01",
-            "name": "invincible-app-linuxadmin-westeurope",
-            "location": "West Europe",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', 'invincible-linuxadmin-appservice-westeurope')]"
-            ],
-            "kind": "app,linux",
-            "properties": {
-                "enabled": true,
-                "hostNameSslStates": [
-                    {
-                        "name": "invincible-app-linuxadmin-westeurope.azurewebsites.net",
-                        "sslState": "Disabled",
-                        "hostType": "Standard"
-                    },
-                    {
-                        "name": "invincible-app-linuxadmin-westeurope.scm.azurewebsites.net",
-                        "sslState": "Disabled",
-                        "hostType": "Repository"
-                    }
-                ],
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'invincible-linuxadmin-appservice-westeurope')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-app'))]",
                 "reserved": true,
                 "isXenon": false,
                 "hyperV": false,
