@@ -19,7 +19,7 @@ How did we do this?
 
 [Copy Loops](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/copy-variables#variable-iteration)
 
-```arm
+```json
   "type": "Microsoft.Web/serverfarms",
   "apiVersion": "2018-02-01",
   "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('appServiceSuffix'))]",
@@ -32,7 +32,7 @@ How did we do this?
 
 We also use copy loops inside of a resource property to itterate over properties of a resource instead of the resource itself.
 
-```arm
+```json
 "name": "DefaultBackendPool",
 "properties": {
     "copy": [
@@ -53,7 +53,7 @@ We also use copy loops inside of a resource property to itterate over properties
 ```
 
 We use variables to define the names of resources, and the entire deployment is modified by just setting where we want to deploy.
-```arm
+```json
 "appLocations": [
     "eastus",
     "centralus",
@@ -68,6 +68,6 @@ We leverage [take](https://docs.microsoft.com/en-us/azure/azure-resource-manager
 appName we will end up with the same hash. Using this in a different sub, resource group, or app name will generate a 
 different string.
 
-```
+```json
 "randomAppName": "[take(uniqueString(parameters('appName'), resourceGroup().name, subscription().subscriptionId), 6)]",
 ```
