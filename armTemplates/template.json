@@ -8,7 +8,7 @@
         }
     },
     "variables": {
-        "randomAppName": "[take(uniqueString(resourceGroup().id, deployment().name), 6)]",
+        "randomAppName": "[take(uniqueString(parameters('appName'), subscription().subsctiptionId), 6)]",
         "cosmosName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-cosmos')]",
         "dbName": "[concat(parameters('appName'), '-db')]",
         "frontDoorName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-afd')]",
@@ -316,7 +316,7 @@
         {
             "type": "Microsoft.Web/sites/hostNameBindings",
             "apiVersion": "2018-11-01",
-            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '/', variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-app', '/', variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
             "location": "East US",
             "copy": {
                 "count": "[length(variables('appLocations'))]",
