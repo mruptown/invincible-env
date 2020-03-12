@@ -97,7 +97,6 @@
                                         "enabledState": "Enabled"
                                     }
                                 }
-
                             ],
                             "healthProbeSettings": {
                                 "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/healthProbeSettings/DefaultProbeSettings')]"
