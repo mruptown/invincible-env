@@ -8,11 +8,13 @@
         }
     },
     "variables": {
-        "randomAppName": "[take(uniqueString(parameters('appName'), subscription().subscriptionId), 6)]",
+        "randomAppName": "[take(uniqueString(parameters('appName'), resourceGroup().name, subscription().subscriptionId), 6)]",
         "cosmosName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-cosmos')]",
         "dbName": "[concat(parameters('appName'), '-db')]",
         "frontDoorName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-afd')]",
         "appName": "[concat(parameters('appName'), '-', variables('randomAppName'))]",
+        "appServiceSuffix": "-app",
+        "webAppSuffix": "-web",
         "location": "[resourceGroup().location]",
         "appLocations": [
             "eastus",
@@ -175,7 +177,7 @@
         {
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2018-02-01",
-            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-app')]",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('appServiceSuffix'))]",
             "copy": {
                 "count": "[length(variables('appLocations'))]",
                 "name": "appLoop"
@@ -203,7 +205,7 @@
         {
             "type": "Microsoft.Web/sites",
             "apiVersion": "2018-11-01",
-            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web')]",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'))]",
             "location": "[variables('appLocations')[copyIndex()]]",
             "copy": {
                 "count": "[length(variables('appLocations'))]",
@@ -215,17 +217,17 @@
                 "enabled": true,
                 "hostNameSslStates": [
                     {
-                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
+                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '.azurewebsites.net')]",
                         "sslState": "Disabled",
                         "hostType": "Standard"
                     },
                     {
-                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.scm.azurewebsites.net')]",
+                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), 'scm..azurewebsites.net')]",
                         "sslState": "Disabled",
                         "hostType": "Repository"
                     }
                 ],
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-app'))]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('appServiceSuffix')))]",
                 "reserved": true,
                 "isXenon": false,
                 "hyperV": false,
@@ -242,7 +244,7 @@
         {
             "type": "Microsoft.Web/sites/config",
             "apiVersion": "2018-11-01",
-            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-web/web')]",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '/web')]",
             "location": "East US",
             "copy": {
                 "count": "[length(variables('appLocations'))]",
@@ -269,7 +271,7 @@
                 "httpLoggingEnabled": false,
                 "logsDirectorySizeLimit": 35,
                 "detailedErrorLoggingEnabled": false,
-                "publishingUsername": "[concat('$', variables('appName'), '-', variables('appLocations')[copyIndex()], '-web')]",
+                "publishingUsername": "[concat('$', variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'))]",
                 "scmType": "None",
                 "use32BitWorkerProcess": true,
                 "webSocketsEnabled": false,
@@ -316,7 +318,7 @@
         {
             "type": "Microsoft.Web/sites/hostNameBindings",
             "apiVersion": "2018-11-01",
-            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], '-app', '/', variables('appName'), '-', variables('appLocations')[copyIndex()], '-web.azurewebsites.net')]",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '/', variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '.azurewebsites.net')]",
             "location": "East US",
             "copy": {
                 "count": "[length(variables('appLocations'))]",
