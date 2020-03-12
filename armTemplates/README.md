@@ -46,6 +46,7 @@ We leverage [copy loops](https://docs.microsoft.com/en-us/azure/azure-resource-m
   "location": "[variables('appLocations')[copyIndex()]]",
 ```
 
+
 We also use copy loops inside of a resource property to itterate over properties of a resource instead of the resource itself.
 
 ```json
