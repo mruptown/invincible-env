@@ -57,12 +57,12 @@ We also use copy loops inside of a resource property to itterate over properties
             "name": "backends",
             "count": "[length(variables('appLocations'))]",
             "input": {
-                "address": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], '-web.azurewebsites.net')]",
+                "address": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], variables('webAppSuffix'), '.azurewebsites.net')]",
                 "httpPort": 80,
                 "httpsPort": 443,
                 "priority": 1,
                 "weight": 50,
-                "backendHostHeader": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], '-web.azurewebsites.net')]",
+                "backendHostHeader": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], variables('webAppSuffix'), '.azurewebsites.net')]",
                 "enabledState": "Enabled"
             }
         }
