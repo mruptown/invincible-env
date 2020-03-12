@@ -10,8 +10,15 @@
     - [ARM Deployments](#arm-deployments)
     - [What next?](#what-next)
 
+---
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fedm-ms%2Finvincible-env%2Fmaster%2FarmTemplates%2Ftemplate.json" target="_blank" rel="noopener noreferrer">
+### What is this?
+
+ This is an ARM template deployment of the "invincible infrastructure" hack that was built using AZ CLI. The goal here is to show an alternative method of deployment using ARM templates, and the benefits of a declarative language. This is a modified template that started as an export from the Azure Portal. The [exported template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/Portal%20Export/template.json) is 620 lines long, and [this template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/template.json) is only 336 lines long!
+
+ Using the "Deploy to Azure" button below you can deploy this into your Azure subscription. The "Visualize" button will show you the resources being deployed, but it does not understand copy loops (more below) so the quantity of resources will not be displayed.
+
+ <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fedm-ms%2Finvincible-env%2Fmaster%2FarmTemplates%2Ftemplate.json" target="_blank" rel="noopener noreferrer">
 
 
 <img src="http://azuredeploy.net/deploybutton.png"/>
@@ -24,15 +31,9 @@
 
 </a>
 
----
+### Copy Loops
 
-### What is this?
-
- This is an ARM template deployment of the "invincible infrastructure" hack that was built using AZ CLI. The goal here is to show an alternative method of deployment using ARM templates, and the benefits of a declarative language. This is a modified template that started as an export from the Azure Portal. The [exported template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/Portal%20Export/template.json) is 620 lines long, and [this template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/template.json) is only 336 lines long! How did we do this?
-
-### [Copy Loops](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/copy-variables#variable-iteration)
-
-We leverage copy loops so we don't need to define the same resource over and over again in the template. Doing this greatly reduces the size of the overall template.
+We leverage [copy loops](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/copy-variables#variable-iteration) so we don't need to define the same resource over and over again in the template. Doing this greatly reduces the size of the overall template.
 
 ```json
   "type": "Microsoft.Web/serverfarms",
