@@ -8,7 +8,7 @@
         }
     },
     "variables": {
-        "randomAppName": "[take(uniqueString(parameters('appName'), subscription().subsctiptionId), 6)]",
+        "randomAppName": "[take(uniqueString(parameters('appName'), subscription().subscriptionId), 6)]",
         "cosmosName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-cosmos')]",
         "dbName": "[concat(parameters('appName'), '-db')]",
         "frontDoorName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-afd')]",
