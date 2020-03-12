@@ -13,11 +13,9 @@
 
 </a>
 
-This is a modified template that started as an export from the Azure Portal. The [exported template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/Portal%20Export/template.json) is 620 lines long, and [this template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/template.json) is 336 lines long!
+### This is an ARM template deployment of the "invincible infrastructure" hack that was built using AZ CLI. The goal here is to show an alternative method of deployment using ARM templates, and the benefits of a declarative language. This is a modified template that started as an export from the Azure Portal. The [exported template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/Portal%20Export/template.json) is 620 lines long, and [this template](https://github.com/edm-ms/invincible-env/blob/master/armTemplates/template.json) is only 336 lines long! How did we do this?
 
-How did we do this?
-
-[Copy Loops](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/copy-variables#variable-iteration)
+### [Copy Loops](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/copy-variables#variable-iteration) were used so we didn't need to define the same resource over and over again in the template.
 
 ```json
   "type": "Microsoft.Web/serverfarms",
@@ -30,7 +28,7 @@ How did we do this?
   "location": "[variables('appLocations')[copyIndex()]]",
 ```
 
-We also use copy loops inside of a resource property to itterate over properties of a resource instead of the resource itself.
+### We also use copy loops inside of a resource property to itterate over properties of a resource instead of the resource itself.
 
 ```json
 "name": "DefaultBackendPool",
@@ -52,7 +50,8 @@ We also use copy loops inside of a resource property to itterate over properties
     ]
 ```
 
-We use variables to define the names of resources, and the entire deployment is modified by just setting where we want to deploy.
+### Variables define the names of resources, and the entire deployment is modified by just setting where we want to deploy.
+
 ```json
 "appLocations": [
     "eastus",
@@ -62,12 +61,12 @@ We use variables to define the names of resources, and the entire deployment is 
 ]
 ```
 
-We also use the template function [uniqueString](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions-string#uniquestring) to help construct a unique but repeatable name for the app.
-Passing in the appName parameter, resource group name, and subscription ID to generate our hash to add to the resources.
-We leverage [take](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions-array#take) to grab 6 characters for this string. If we deploy in the same sub, resource group, and use the same
-appName we will end up with the same hash. Using this in a different sub, resource group, or app name will generate a 
-different string.
+### We also use the template function [uniqueString](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions-string#uniquestring) to help construct a unique but repeatable name for the app. Passing in the appName parameter, resource group name, and subscription ID to generate our hash to add to the resources. We leverage [take](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-functions-array#take) to grab 6 characters for this string. If we deploy in the same sub, resource group, and use the same appName we will end up with the same hash. Using this in a different sub, resource group, or app name will generate a different string.
 
 ```json
 "randomAppName": "[take(uniqueString(parameters('appName'), resourceGroup().name, subscription().subscriptionId), 6)]",
 ```
+
+### When we push our template to the Azure Resource Manager (ARM) we are able to track all elements of the deployment.
+
+![deployment]("/../images/deployment.png")
