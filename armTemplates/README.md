@@ -69,4 +69,4 @@
 
 ### When we push our template to the Azure Resource Manager (ARM) we are able to track all elements of the deployment.
 
-![deployment]("/../images/deployment.png")
+<img src="/../images/deployment.png">
