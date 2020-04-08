@@ -18,9 +18,7 @@
         "location": "[resourceGroup().location]",
         "appLocations": [
             "eastus",
-            "centralus",
-            "westcentralus",
-            "westus2"
+            "centralus"
         ]
     },
     "resources": [
