@@ -17,7 +17,6 @@
         "webAppSuffix": "-web",
         "location": "[resourceGroup().location]",
         "appLocations": [
-            "eastus",
             "centralus"
         ]
     },
