@@ -1,0 +1,332 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "type": "string",
+            "defaultValue": "invincible"
+        }
+    },
+    "variables": {
+        "randomAppName": "[take(uniqueString(parameters('appName'), resourceGroup().name, subscription().subscriptionId), 6)]",
+        "cosmosName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-cosmos')]",
+        "dbName": "[concat(parameters('appName'), '-db')]",
+        "frontDoorName": "[concat(parameters('appName'), '-', variables('randomAppName'), '-afd')]",
+        "appName": "[concat(parameters('appName'), '-', variables('randomAppName'))]",
+        "appServiceSuffix": "-app",
+        "webAppSuffix": "-web",
+        "location": "[resourceGroup().location]",
+        "appLocations": [
+            "centralus"
+        ]
+    },
+    "resources": [
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts",
+            "apiVersion": "2019-12-12",
+            "name": "[variables('cosmosName')]",
+            "location": "[variables('location')]",
+            "kind": "MongoDB",
+            "properties": {
+                "enableAutomaticFailover": true,
+                "enableMultipleWriteLocations": true,
+                "isVirtualNetworkFilterEnabled": false,
+                "virtualNetworkRules": [],
+                "disableKeyBasedMetadataWriteAccess": false,
+                "databaseAccountOfferType": "Standard",
+                "consistencyPolicy": {
+                    "defaultConsistencyLevel": "Session",
+                    "maxIntervalInSeconds": 5,
+                    "maxStalenessPrefix": 100
+                },
+                "copy": [
+                    {
+                        "name": "locations",
+                        "count": "[length(variables('appLocations'))]",
+                        "input": {
+                            "locationName": "[variables('appLocations')[copyIndex('locations')]]",
+                            "failoverPriority": "[copyIndex('locations')]",
+                            "isZoneRedundant": false
+                        }
+                    }
+                ],
+                "capabilities": []
+            }
+        },
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases",
+            "apiVersion": "2019-12-12",
+            "name": "[concat(variables('cosmosName'), '/', variables('dbName'))]",
+            "dependsOn": [
+                "[variables('cosmosName')]"
+            ],
+            "properties": {
+                "resource": {
+                    "id": "[variables('dbName')]"
+                },
+                "options": {}
+            }
+        },
+        {
+            "type": "Microsoft.Network/frontdoors",
+            "apiVersion": "2018-08-01",
+            "name": "[variables('frontDoorName')]",
+            "location": "Global",
+            "dependsOn": [ "bindingLoop" ],
+            "properties": {
+                "resourceState": "Enabled",
+                "backendPools": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/BackendPools/DefaultBackendPool')]",
+                        "name": "DefaultBackendPool",
+                        "properties": {
+                            "copy": [
+                                {
+                                    "name": "backends",
+                                    "count": "[length(variables('appLocations'))]",
+                                    "input": {
+                                        "address": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], variables('webAppSuffix'), '.azurewebsites.net')]",
+                                        "httpPort": 80,
+                                        "httpsPort": 443,
+                                        "priority": 1,
+                                        "weight": 50,
+                                        "backendHostHeader": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex('backends')], variables('webAppSuffix'), '.azurewebsites.net')]",
+                                        "enabledState": "Enabled"
+                                    }
+                                }
+                            ],
+                            "healthProbeSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/healthProbeSettings/DefaultProbeSettings')]"
+                            },
+                            "loadBalancingSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/LoadBalancingSettings/NewLoadBalancingSettings')]"
+                            },
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "healthProbeSettings": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/HealthProbeSettings/DefaultProbeSettings')]",
+                        "name": "DefaultProbeSettings",
+                        "properties": {
+                            "intervalInSeconds": 5,
+                            "path": "/",
+                            "protocol": "Https",
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "frontendEndpoints": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/FrontendEndpoints/DefaultFrontendEndpoint')]",
+                        "name": "DefaultFrontendEndpoint",
+                        "properties": {
+                            "hostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
+                            "sessionAffinityEnabledState": "Disabled",
+                            "sessionAffinityTtlSeconds": 0,
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "loadBalancingSettings": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/LoadBalancingSettings/NewLoadBalancingSettings')]",
+                        "name": "NewLoadBalancingSettings",
+                        "properties": {
+                            "additionalLatencyMilliseconds": 0,
+                            "sampleSize": 1,
+                            "successfulSamplesRequired": 1,
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "routingRules": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/RoutingRules/DefaultRoutingRule')]",
+                        "name": "DefaultRoutingRule",
+                        "properties": {
+                            "frontendEndpoints": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/frontendEndpoints/DefaultFrontendEndpoint')]"
+                                }
+                            ],
+                            "acceptedProtocols": [
+                                "Http"
+                            ],
+                            "patternsToMatch": [
+                                "/*"
+                            ],
+                            "forwardingProtocol": "MatchRequest",
+                            "backendPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/backendPools/DefaultBackendPool')]"
+                            },
+                            "enabledState": "Enabled",
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "enabledState": "Enabled",
+                "friendlyName": "[variables('frontDoorName')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('appServiceSuffix'))]",
+            "copy": {
+                "count": "[length(variables('appLocations'))]",
+                "name": "appLoop"
+            },
+            "location": "[variables('appLocations')[copyIndex()]]",
+            "sku": {
+                "name": "B1",
+                "tier": "Basic",
+                "size": "B1",
+                "family": "B",
+                "capacity": 1
+            },
+            "kind": "linux",
+            "properties": {
+                "perSiteScaling": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'))]",
+            "location": "[variables('appLocations')[copyIndex()]]",
+            "copy": {
+                "count": "[length(variables('appLocations'))]",
+                "name": "webLoop"
+            },
+            "dependsOn": [ "appLoop" ],
+            "kind": "app,linux",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), 'scm..azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('appServiceSuffix')))]",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false,
+                "redundancyMode": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '/web')]",
+            "location": "East US",
+            "copy": {
+                "count": "[length(variables('appLocations'))]",
+                "name": "configLoop"                
+            },
+            "dependsOn": [ "webLoop" ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "defaultDocuments": [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php",
+                    "hostingstart.html"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "linuxFxVersion": "NODE|12.9",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": false,
+                "httpLoggingEnabled": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": false,
+                "publishingUsername": "[concat('$', variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'))]",
+                "scmType": "None",
+                "use32BitWorkerProcess": true,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": []
+                },
+                "autoHealEnabled": false,
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": true,
+                "minTlsVersion": "1.2",
+                "ftpsState": "AllAllowed",
+                "reservedInstanceCount": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2018-11-01",
+            "name": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '/', variables('appName'), '-', variables('appLocations')[copyIndex()], variables('webAppSuffix'), '.azurewebsites.net')]",
+            "location": "East US",
+            "copy": {
+                "count": "[length(variables('appLocations'))]",
+                "name": "bindingLoop"
+            },
+            "dependsOn": [
+                "configLoop"
+            ],
+            "properties": {
+                "siteName": "[concat(variables('appName'), '-', variables('appLocations')[copyIndex()])]",
+                "hostNameType": "Verified"
+            }
+        }
+    ]
+}
